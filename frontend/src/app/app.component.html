@@ -1,0 +1,20 @@
+<nav class="navbar">
+  <div class="container nav-content">
+    <div class="logo font-outfit" routerLink="/">Concours<span>Hub</span></div>
+    <div class="nav-links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Accueil</a>
+      <a routerLink="/postuler" routerLinkActive="active">S'inscrire</a>
+      <a routerLink="/suivi" routerLinkActive="active">Suivi</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <router-outlet></router-outlet>
+</main>
+
+<footer class="footer">
+  <div class="container text-center">
+    <p>&copy; 2026 Plateforme de Gestion des Concours. Tous droits réservés.</p>
+  </div>
+</footer>
