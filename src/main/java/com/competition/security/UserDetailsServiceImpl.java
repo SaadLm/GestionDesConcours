@@ -2,6 +2,7 @@ package com.competition.security;
 
 import com.competition.model.User;
 import com.competition.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

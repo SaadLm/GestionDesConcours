@@ -26,6 +26,22 @@ export interface Concours {
   dateDebutInscription: string;
   dateFinInscription: string;
   statut: string;
+  specialites?: Specialite[];
+  centres?: Centre[];
+}
+
+export interface Diplome {
+  intitule: string;
+  niveau: string;
+  etablissement: string;
+  anneeObtention: number;
+  specialite: string;
+}
+
+export interface DocumentReference {
+  cin: string;
+  cv: string;
+  diplome: string;
 }
 
 export interface Candidat {
@@ -34,8 +50,8 @@ export interface Candidat {
   prenom: string;
   cin: string;
   dateNaissance: string;
-  lieuNaissance?: string;
-  adresse?: string;
+  lieuNaissance: string;
+  adresse: string;
   email: string;
   telephone: string;
 }
@@ -47,7 +63,40 @@ export interface Candidature {
   concours: Partial<Concours>;
   specialite: Partial<Specialite>;
   centre: Partial<Centre>;
+  diplome: Diplome;
+  experienceProfessionnelle: string;
+  documents: DocumentReference;
+  notifications: {
+    email: boolean;
+    sms: boolean;
+  };
   dateSoumission?: string;
   statut?: string;
   commentaire?: string;
+}
+
+export type RoleType = 'Gestionnaire local' | 'Gestionnaire global' | 'Administrateur';
+
+export interface UserBase {
+  id?: number;
+  email: string;
+  nom: string;
+  prenom?: string;
+  role: RoleType;
+}
+
+export interface GestionnaireLocal extends UserBase {
+  role: 'Gestionnaire local';
+  centreId: number;
+  permissions: string[];
+}
+
+export interface GestionnaireGlobal extends UserBase {
+  role: 'Gestionnaire global';
+  permissions: string[];
+}
+
+export interface Administrateur extends UserBase {
+  role: 'Administrateur';
+  permissions: string[];
 }

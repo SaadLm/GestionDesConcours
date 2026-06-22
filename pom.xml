@@ -35,6 +35,10 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 		<dependency>
+		<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-jpa</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
@@ -84,7 +88,8 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.32</version>
+			<version>1.18.38</version>
+			      <scope>provided</scope>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -106,6 +111,13 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>1.18.38</version>
+						</path>
+					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -123,7 +135,7 @@
 								<path>
 									<groupId>org.projectlombok</groupId>
 									<artifactId>lombok</artifactId>
-									<version>1.18.32</version>
+									<version>1.18.38</version>
 								</path>
 							</annotationProcessorPaths>
 						</configuration>
@@ -139,7 +151,7 @@
 								<path>
 									<groupId>org.projectlombok</groupId>
 									<artifactId>lombok</artifactId>
-									<version>1.18.32</version>
+									<version>1.18.38</version>
 								</path>
 							</annotationProcessorPaths>
 						</configuration>

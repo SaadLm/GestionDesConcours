@@ -1,13 +1,24 @@
 import { Component } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { AuthService, UserSession } from './services/auth.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-  title = 'frontend';
+  user$: Observable<UserSession | null>;
+
+  constructor(private authService: AuthService) {
+    this.user$ = this.authService.user$;
+  }
+
+  logout() {
+    this.authService.logout();
+  }
 }

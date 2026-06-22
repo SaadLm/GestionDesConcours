@@ -3,6 +3,7 @@ package com.competition.config;
 import com.competition.model.Role;
 import com.competition.model.User;
 import com.competition.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
