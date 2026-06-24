@@ -1,5 +1,7 @@
 package com.competition.security;
 
+import com.competition.model.User;
+import com.competition.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(
@@ -40,7 +43,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         userEmail = jwtUtils.extractUsername(jwt);
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-            if (jwtUtils.isTokenValid(jwt, userDetails)) {
+            
+            User dbUser = userRepository.findByEmail(userEmail).orElse(null);
+            
+            if (dbUser != null && jwt.equals(dbUser.getActiveToken()) && jwtUtils.isTokenValid(jwt, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,

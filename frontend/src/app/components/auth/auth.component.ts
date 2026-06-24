@@ -23,7 +23,7 @@ interface TestAccount {
           <h1 class="font-outfit">Authentification</h1>
           <p>Connectez-vous en tant que gestionnaire local, gestionnaire global ou administrateur pour accéder aux fonctionnalités dédiées.</p>
         </div>
-        <div class="test-note">
+        <!-- <div class="test-note">
           <p><strong>Comptes de test :</strong></p>
    
           <ul>
@@ -33,7 +33,7 @@ interface TestAccount {
           </ul>
           <p>Appuyez sur un bouton pour remplir automatiquement un compte de test.</p>
         </div>
-      </div>
+      </div> -->
 
       <div class="grid auth-grid">
         <section class="glass-card auth-card login-card">

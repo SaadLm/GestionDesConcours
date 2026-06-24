@@ -1,8 +1,8 @@
 package com.competition.controller;
 
 import com.competition.dto.ApiResponse;
-import com.competition.model.Candidature;
 import com.competition.repository.CandidatureRepository;
+import com.competition.model.Candidature;
 import com.competition.service.CandidatureService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +23,7 @@ public class ManagerController {
     @PreAuthorize("hasAnyRole('GESTIONNAIRE_LOCAL', 'GESTIONNAIRE_GLOBAL', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<Candidature>>> getCandidatures(
             @RequestParam(required = false) Long centreId) {
-        
+
         List<Candidature> list;
         if (centreId != null) {
             list = candidatureRepository.findByCentreId(centreId);
@@ -53,7 +53,7 @@ public class ManagerController {
     public ResponseEntity<ApiResponse<Void>> rejeter(@PathVariable Long id, @RequestParam String commentaire) {
         Candidature candidature = candidatureRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Candidature non trouvée."));
-        
+
         candidature.setStatut(com.competition.model.StatutCandidature.REJETEE);
         candidature.setCommentaire(commentaire);
         candidatureRepository.save(candidature);

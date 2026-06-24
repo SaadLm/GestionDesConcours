@@ -36,6 +36,9 @@ public class User {
     @JoinColumn(name = "centre_id")
     private Centre centre; // Only for GESTIONNAIRE_LOCAL
 
+    @Column(length = 1000)
+    private String activeToken;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

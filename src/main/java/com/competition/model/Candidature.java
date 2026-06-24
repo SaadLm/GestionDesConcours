@@ -47,6 +47,10 @@ public class Candidature {
     @OneToMany(mappedBy = "candidature", cascade = CascadeType.ALL)
     private List<Document> documents;
 
+    @ManyToOne
+    @JoinColumn(name = "salle_id")
+    private Salle salle;
+
     @PrePersist
     protected void onCreate() {
         dateSoumission = LocalDateTime.now();

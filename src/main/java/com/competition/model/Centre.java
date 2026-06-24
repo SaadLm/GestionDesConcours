@@ -27,4 +27,7 @@ public class Centre {
 
     @OneToMany(mappedBy = "centre")
     private List<CentreSpecialite> centreSpecialites;
+
+    @OneToMany(mappedBy = "centre", cascade = CascadeType.ALL)
+    private List<Salle> salles;
 }

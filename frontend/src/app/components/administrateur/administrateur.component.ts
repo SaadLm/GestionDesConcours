@@ -1,13 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-interface UserAccount {
-  id: number;
-  nom: string;
-  email: string;
-  role: string;
-}
+import { ApiService } from '../../services/api.service';
+import { UserBase, Centre } from '../../models/models';
 
 interface SettingsItem {
   label: string;
@@ -47,7 +42,8 @@ interface SettingsItem {
 
       <section class="table-section">
         <h2>Gestion des comptes utilisateurs</h2>
-        <table>
+        <div *ngIf="loadingUsers" class="muted">Chargement des utilisateurs...</div>
+        <table *ngIf="!loadingUsers">
           <thead>
             <tr>
               <th>Nom</th>
@@ -57,7 +53,7 @@ interface SettingsItem {
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let user of users; let i = index">
+            <tr *ngFor="let user of users">
               <td>{{ user.nom }}</td>
               <td>{{ user.email }}</td>
               <td>
@@ -68,8 +64,14 @@ interface SettingsItem {
                 </select>
               </td>
               <td>
-                <button class="btn btn-primary btn-sm" (click)="saveUser(user)">Sauvegarder</button>
-                <button class="btn btn-secondary btn-sm" (click)="deleteUser(i)">Supprimer</button>
+                <button class="btn btn-primary btn-sm" (click)="saveUser(user)" [disabled]="updatingUserId===user.id">
+                  <span *ngIf="updatingUserId===user.id">Sauvegarde...</span>
+                  <span *ngIf="updatingUserId!==user.id">Sauvegarder</span>
+                </button>
+                <button class="btn btn-secondary btn-sm" (click)="deleteUser(user.id)" [disabled]="deletingUserId===user.id">
+                  <span *ngIf="deletingUserId===user.id">Suppression...</span>
+                  <span *ngIf="deletingUserId!==user.id">Supprimer</span>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -82,10 +84,12 @@ interface SettingsItem {
           <div class="input-group">
             <label>Nom</label>
             <input type="text" [(ngModel)]="newUser.nom" placeholder="Nom complet">
+            <div class="field-error" *ngIf="newUserErrors['nom']">{{ newUserErrors['nom'] }}</div>
           </div>
           <div class="input-group">
             <label>Email</label>
             <input type="email" [(ngModel)]="newUser.email" placeholder="email@domaine.com">
+            <div class="field-error" *ngIf="newUserErrors['email']">{{ newUserErrors['email'] }}</div>
           </div>
           <div class="input-group">
             <label>Rôle</label>
@@ -94,9 +98,27 @@ interface SettingsItem {
               <option>Gestionnaire global</option>
               <option>Administrateur</option>
             </select>
+            <div class="field-error" *ngIf="newUserErrors['role']">{{ newUserErrors['role'] }}</div>
+          </div>
+          <div class="input-group">
+            <label>Mot de passe</label>
+            <input type="password" [(ngModel)]="newUser.password" placeholder="Mot de passe">
+            <div class="field-error" *ngIf="newUserErrors['password']">{{ newUserErrors['password'] }}</div>
+          </div>
+
+          <div class="input-group" *ngIf="centres.length">
+            <label>Centre (pour gestionnaire local)</label>
+            <select [(ngModel)]="newUser.centreId">
+              <option [ngValue]="undefined">-- aucun --</option>
+              <option *ngFor="let c of centres" [ngValue]="c.id">{{ c.nom }} - {{ c.ville }}</option>
+            </select>
+            <div class="field-error" *ngIf="newUserErrors['centreId']">{{ newUserErrors['centreId'] }}</div>
           </div>
         </div>
-        <button class="btn btn-primary" type="button" (click)="createUser()">Créer un compte</button>
+        <button class="btn btn-primary" type="button" (click)="createUser()" [disabled]="creatingUser">
+          <span *ngIf="creatingUser">Création...</span>
+          <span *ngIf="!creatingUser">Créer un compte</span>
+        </button>
         <p *ngIf="createMessage" class="alert alert-info">{{ createMessage }}</p>
       </section>
 
@@ -189,6 +211,15 @@ interface SettingsItem {
       color: #1d4ed8;
       border: 1px solid #93c5fd;
     }
+    .field-error {
+      color: #b91c1c;
+      font-size: 0.9rem;
+      margin-top: 0.35rem;
+    }
+    .muted {
+      color: var(--text-muted);
+      padding: 0.5rem 0;
+    }
     @media (max-width: 760px) {
       .btn-sm {
         display: block;
@@ -199,51 +230,163 @@ interface SettingsItem {
   `]
 })
 export class AdministrateurComponent {
-  users: UserAccount[] = [
-    { id: 1, nom: 'Nadia Choukri', email: 'nadia@domain.com', role: 'Gestionnaire local' },
-    { id: 2, nom: 'Rachid Belkheir', email: 'rachid@domain.com', role: 'Gestionnaire global' },
-    { id: 3, nom: 'Sanaa El Amrani', email: 'sanaa@domain.com', role: 'Administrateur' }
-  ];
+  users: UserBase[] = [];
 
   createMessage = '';
   settingsMessage = '';
 
-  newUser: Partial<UserAccount> = {
+  newUser: Partial<UserBase & { password?: string; centreId?: number }> = {
     nom: '',
     email: '',
-    role: 'Gestionnaire local'
+    role: 'Gestionnaire local',
+    password: ''
   };
+
+  centres: Centre[] = [];
+
+  // UI states
+  loadingUsers = false;
+  creatingUser = false;
+  updatingUserId: number | null = null;
+  deletingUserId: number | null = null;
+
+  newUserErrors: { [key: string]: string } = {};
 
   settings: SettingsItem[] = [
     { label: 'Validation automatique des candidatures', value: false },
     { label: 'Notifications par email activées', value: true },
     { label: 'Suivi des accès administratifs', value: true }
   ];
+  constructor(private api: ApiService) {}
+
+  ngOnInit(): void {
+    this.loadUsers();
+    this.loadCentres();
+  }
+
+  loadUsers() {
+    this.loadingUsers = true;
+    this.api.getUsers().subscribe({
+      next: (res) => {
+        this.users = res.data || [];
+        this.loadingUsers = false;
+      },
+      error: () => {
+        this.createMessage = 'Erreur lors du chargement des utilisateurs.';
+        this.loadingUsers = false;
+      }
+    });
+  }
+
+  loadCentres() {
+    this.api.getCentres().subscribe({
+      next: (res) => {
+        this.centres = res.data || [];
+      },
+      error: () => {
+        // ignore non-fatal
+      }
+    });
+  }
+  validateNewUser(): boolean {
+    this.newUserErrors = {};
+    if (!this.newUser.nom || (this.newUser.nom || '').trim().length < 2) {
+      this.newUserErrors['nom'] = 'Veuillez fournir un nom valide.';
+    }
+    if (!this.newUser.email || !String(this.newUser.email).includes('@')) {
+      this.newUserErrors['email'] = 'Veuillez fournir un email valide.';
+    }
+    if (!this.newUser.role) {
+      this.newUserErrors['role'] = 'Veuillez choisir un rôle.';
+    }
+    if (this.newUser.role === 'Gestionnaire local' && !this.newUser.centreId) {
+      this.newUserErrors['centreId'] = 'Un gestionnaire local nécessite un centre.';
+    }
+    if (!this.newUser.password || (this.newUser.password || '').length < 6) {
+      this.newUserErrors['password'] = 'Le mot de passe doit contenir au moins 6 caractères.';
+    }
+    return Object.keys(this.newUserErrors).length === 0;
+  }
+
+  mapRoleToEnum(roleLabel: string): string {
+    if (!roleLabel) return roleLabel;
+    const label = roleLabel.toLowerCase();
+    if (label.includes('local')) return 'GESTIONNAIRE_LOCAL';
+    if (label.includes('global')) return 'GESTIONNAIRE_GLOBAL';
+    if (label.includes('administr')) return 'ADMIN';
+    return roleLabel;
+  }
 
   createUser() {
-    if (!this.newUser.nom || !this.newUser.email || !this.newUser.role) {
-      this.createMessage = 'Veuillez remplir tous les champs pour créer un compte.';
+    if (!this.validateNewUser()) {
+      this.createMessage = 'Veuillez corriger les erreurs du formulaire.';
       return;
     }
 
-    this.users.push({
-      id: this.users.length + 1,
+    const payload: any = {
       nom: this.newUser.nom,
+      prenom: (this.newUser as any).prenom || '',
       email: this.newUser.email,
-      role: this.newUser.role
-    } as UserAccount);
+      password: this.newUser.password,
+      role: this.mapRoleToEnum(this.newUser.role as string),
+      centreId: (this.newUser as any).centreId
+    };
 
-    this.createMessage = `Compte créé pour ${this.newUser.nom}.`;
-    this.newUser = { nom: '', email: '', role: 'Gestionnaire local' };
+    this.creatingUser = true;
+    this.api.createUser(payload).subscribe({
+      next: (res) => {
+        this.createMessage = `Compte créé pour ${res.data.nom}.`;
+        this.newUser = { nom: '', email: '', role: 'Gestionnaire local', password: '' };
+        this.creatingUser = false;
+        this.loadUsers();
+      },
+      error: (err) => {
+        this.createMessage = err?.error?.message || 'Erreur lors de la création de l\'utilisateur.';
+        this.creatingUser = false;
+      }
+    });
   }
 
-  deleteUser(index: number) {
-    this.users.splice(index, 1);
-    this.createMessage = 'Compte utilisateur supprimé.';
+  deleteUser(userId?: number) {
+    if (!userId) return;
+    const confirmed = window.confirm('Confirmer la suppression de cet utilisateur ?');
+    if (!confirmed) return;
+    this.deletingUserId = userId;
+    this.api.deleteUser(userId).subscribe({
+      next: () => {
+        this.createMessage = 'Compte utilisateur supprimé.';
+        this.deletingUserId = null;
+        this.loadUsers();
+      },
+      error: () => {
+        this.createMessage = 'Erreur lors de la suppression de l\'utilisateur.';
+        this.deletingUserId = null;
+      }
+    });
   }
 
-  saveUser(user: UserAccount) {
-    this.createMessage = `Rôle mis à jour pour ${user.nom} : ${user.role}.`;
+  saveUser(user: UserBase) {
+    if (!user.id) return;
+    const payload: any = {
+      nom: user.nom,
+      prenom: (user as any).prenom || '',
+      email: user.email,
+      role: this.mapRoleToEnum(user.role as string),
+      centreId: (user as any).centreId
+    };
+
+    this.updatingUserId = user.id;
+    this.api.updateUser(user.id, payload).subscribe({
+      next: () => {
+        this.createMessage = `Rôle mis à jour pour ${user.nom} : ${user.role}.`;
+        this.updatingUserId = null;
+        this.loadUsers();
+      },
+      error: () => {
+        this.createMessage = 'Erreur lors de la mise à jour de l\'utilisateur.';
+        this.updatingUserId = null;
+      }
+    });
   }
 
   saveSettings() {
