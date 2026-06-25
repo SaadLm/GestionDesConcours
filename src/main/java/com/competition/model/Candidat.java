@@ -1,5 +1,6 @@
 package com.competition.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -39,5 +40,6 @@ public class Candidat {
     private String telephone;
 
     @OneToMany(mappedBy = "candidat", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Diplome> diplomes;
 }

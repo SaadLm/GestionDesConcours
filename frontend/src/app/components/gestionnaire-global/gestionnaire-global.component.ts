@@ -11,7 +11,7 @@ interface RapportSimule {
 
 interface ConcoursConfig {
   id: number;
-  titre: string;
+  nom: string;
   specialites: string[];
 }
 
@@ -58,7 +58,7 @@ interface CentreSpecialite {
           <div class="glass-card config-card">
             <h3>Concours disponibles</h3>
             <ul>
-              <li *ngFor="let concours of concoursList">{{ concours.titre }} - {{ getSpecialitesText(concours) }}</li>
+              <li *ngFor="let concours of concoursList">{{ concours.nom }} - {{ getSpecialitesText(concours) }}</li>
             </ul>
           </div>
           <div class="glass-card config-card">
@@ -188,9 +188,9 @@ interface CentreSpecialite {
       margin-top: 1rem;
       padding: 0.85rem 1rem;
       border-radius: var(--radius);
-      background: #eff6ff;
-      color: #1d4ed8;
-      border: 1px solid #93c5fd;
+      background: rgba(249, 115, 22, 0.12);
+      color: var(--primary);
+      border: 1px solid rgba(249, 115, 22, 0.25);
     }
     @media (max-width: 760px) {
       .report-card {

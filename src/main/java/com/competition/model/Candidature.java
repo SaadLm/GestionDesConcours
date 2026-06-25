@@ -1,5 +1,6 @@
 package com.competition.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -45,6 +46,7 @@ public class Candidature {
     private String commentaire;
 
     @OneToMany(mappedBy = "candidature", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Document> documents;
 
     @ManyToOne

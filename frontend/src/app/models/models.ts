@@ -20,7 +20,7 @@ export interface Specialite {
 
 export interface Concours {
   id?: number;
-  titre: string;
+  nom: string;
   description?: string;
   dateConcours: string;
   dateDebutInscription: string;

@@ -5,12 +5,13 @@
 }
 
 .sidebar {
-  background: #0f172a;
-  color: white;
+  background: var(--surface);
+  color: var(--text);
   padding: 2rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
+  border-right: 1px solid var(--border);
 }
 
 .sidebar-brand {
@@ -20,7 +21,7 @@
 }
 
 .sidebar-brand span {
-  color: var(--accent);
+  color: var(--primary);
 }
 
 .sidebar-nav {
@@ -41,8 +42,8 @@
 
 .sidebar-nav a:hover,
 .sidebar-nav a.active {
-  background: rgba(59, 130, 246, 0.18);
-  color: white;
+  background: rgba(249, 115, 22, 0.15);
+  color: var(--text);
 }
 
 .sidebar-role {

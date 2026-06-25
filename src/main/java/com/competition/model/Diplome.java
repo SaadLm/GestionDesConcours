@@ -1,5 +1,6 @@
 package com.competition.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,6 +18,7 @@ public class Diplome {
 
     @ManyToOne
     @JoinColumn(name = "candidat_id", nullable = false)
+    @JsonIgnore
     private Candidat candidat;
 
     @Column(nullable = false)

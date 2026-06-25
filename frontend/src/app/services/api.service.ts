@@ -7,7 +7,7 @@ import { ApiResponse, Candidature, Centre, Concours, Specialite, UserBase } from
   providedIn: 'root'
 })
 export class ApiService {
-  private baseUrl = '/api/v1';
+  private baseUrl = 'http://localhost:8080/api/v1';
 
   constructor(private http: HttpClient) {}
 

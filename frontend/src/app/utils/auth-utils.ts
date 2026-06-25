@@ -10,19 +10,19 @@ export interface TestAccount {
 export const TEST_ACCOUNTS: Record<string, TestAccount> = {
   local: {
     profile: 'Gestionnaire local',
-    email: 'local@test.gov',
+    email: 'local@competition.com',
     password: 'local123',
-    description: 'Compte pour test de gestion locale du centre.'
+    description: 'Compte pour test de gestion locale du Centre de Casablanca.'
   },
   global: {
     profile: 'Gestionnaire global',
-    email: 'global@test.gov',
+    email: 'global@competition.com',
     password: 'global123',
     description: 'Compte pour test de supervision globale.'
   },
   admin: {
     profile: 'Administrateur',
-    email: 'admin@test.gov',
+    email: 'admin@competition.com',
     password: 'admin123',
     description: 'Compte pour test d’administration complète.'
   }

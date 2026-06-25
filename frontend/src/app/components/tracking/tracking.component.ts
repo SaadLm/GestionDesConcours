@@ -51,7 +51,7 @@ import { FormsModule } from '@angular/forms';
             </div>
             <div class="details-card">
               <h3>Concours</h3>
-              <p><strong>Concours :</strong> {{ candidature.concours.titre }}</p>
+              <p><strong>Concours :</strong> {{ candidature.concours.nom }}</p>
               <p><strong>Spécialité :</strong> {{ candidature.specialite.nom }}</p>
               <p><strong>Centre :</strong> {{ candidature.centre.nom }} - {{ candidature.centre.ville }}</p>
             </div>

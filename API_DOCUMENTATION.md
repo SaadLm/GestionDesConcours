@@ -77,6 +77,45 @@ Use the following pre-seeded credentials to test different user roles:
   }
   ```
 
+### 🏢 Liste publique des centres (Public Centres)
+- **URL**: `/public/centres`
+- **Method**: `GET`
+- **Duty**: Returns the list of all centres available for candidatures.
+- **Response (JSON)**:
+  ```json
+  {
+    "success": true,
+    "message": "Liste des centres récupérée avec succès.",
+    "data": [ { "id": 1, "nom": "Centre de Casablanca", "ville": "Casablanca", ... } ]
+  }
+  ```
+
+### 🎓 Liste publique des concours (Public Competitions)
+- **URL**: `/public/concours`
+- **Method**: `GET`
+- **Duty**: Returns the list of all concours open or configured in the system.
+- **Response (JSON)**:
+  ```json
+  {
+    "success": true,
+    "message": "Liste des concours récupérée avec succès.",
+    "data": [ { "id": 1, "titre": "Concours d'entrée 2026", "statut": "OUVERT", ... } ]
+  }
+  ```
+
+### 🧭 Liste publique des spécialités (Public Specialties)
+- **URL**: `/public/specialites`
+- **Method**: `GET`
+- **Duty**: Returns the list of all specialités available for candidatures.
+- **Response (JSON)**:
+  ```json
+  {
+    "success": true,
+    "message": "Liste des spécialités récupérée avec succès.",
+    "data": [ { "id": 1, "nom": "Informatique", "description": "..." } ]
+  }
+  ```
+
 ---
 
 ## 2. Authentication
@@ -221,3 +260,78 @@ Use the following pre-seeded credentials to test different user roles:
 - **URL**: `/admin/users/{id}`
 - **Method**: `DELETE`
 - **Duty**: Deletes a user account from the system.
+
+### 🏢 Admin Centres CRUD (Admin Only)
+- **Base URL**: `/admin/centres`
+- **Required Role**: `ADMIN`
+
+#### Liste des centres (List Centers)
+- **URL**: `/admin/centres`
+- **Method**: `GET`
+- **Duty**: Returns all centre records for admin management.
+
+#### Récupérer un centre (Get Center)
+- **URL**: `/admin/centres/{id}`
+- **Method**: `GET`
+- **Duty**: Returns a specific centre by its ID.
+
+#### Créer un centre (Create Center)
+- **URL**: `/admin/centres`
+- **Method**: `POST`
+- **Duty**: Creates a new centre.
+- **Request Body (JSON)**:
+  ```json
+  {
+    "nom": "Centre de Fès",
+    "ville": "Fès",
+    "adresse": "123 Avenue Royale",
+    "telephone": "0600000000"
+  }
+  ```
+
+#### Modifier un centre (Update Center)
+- **URL**: `/admin/centres/{id}`
+- **Method**: `PUT`
+- **Duty**: Updates the centre's basic details.
+
+#### Supprimer un centre (Delete Center)
+- **URL**: `/admin/centres/{id}`
+- **Method**: `DELETE`
+- **Duty**: Deletes the selected centre from the system.
+
+### 🚪 Admin Salles CRUD (Admin Only)
+- **Base URL**: `/admin/salles`
+- **Required Role**: `ADMIN`
+
+#### Liste des salles (List Rooms)
+- **URL**: `/admin/salles`
+- **Method**: `GET`
+- **Duty**: Returns all salle records for admin management.
+
+#### Récupérer une salle (Get Room)
+- **URL**: `/admin/salles/{id}`
+- **Method**: `GET`
+- **Duty**: Returns a specific salle by its ID.
+
+#### Créer une salle (Create Room)
+- **URL**: `/admin/salles`
+- **Method**: `POST`
+- **Duty**: Creates a new salle linked to an existing centre.
+- **Request Body (JSON)**:
+  ```json
+  {
+    "nom": "Salle A",
+    "capacite": 50,
+    "centre": { "id": 1 }
+  }
+  ```
+
+#### Modifier une salle (Update Room)
+- **URL**: `/admin/salles/{id}`
+- **Method**: `PUT`
+- **Duty**: Updates a salle's name, capacity, or centre association.
+
+#### Supprimer une salle (Delete Room)
+- **URL**: `/admin/salles/{id}`
+- **Method**: `DELETE`
+- **Duty**: Deletes the selected salle from the system.

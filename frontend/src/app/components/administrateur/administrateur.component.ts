@@ -207,9 +207,9 @@ interface SettingsItem {
       margin-top: 1rem;
       padding: 0.85rem 1rem;
       border-radius: var(--radius);
-      background: #eff6ff;
-      color: #1d4ed8;
-      border: 1px solid #93c5fd;
+      background: rgba(249, 115, 22, 0.12);
+      color: var(--primary);
+      border: 1px solid rgba(249, 115, 22, 0.25);
     }
     .field-error {
       color: #b91c1c;

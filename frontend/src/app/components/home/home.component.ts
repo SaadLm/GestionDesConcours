@@ -26,6 +26,32 @@ import { Concours } from '../../models/models';
         </div>
       </section>
 
+      <section class="api-docs-card">
+        <div class="glass-card overview-card">
+          <h2>Documentation API</h2>
+          <p>Base URL : <code>http://localhost:8080/api/v1</code></p>
+          <p>Swagger UI : <a target="_blank" rel="noopener" href="http://localhost:8080/swagger-ui/index.html">http://localhost:8080/swagger-ui/index.html</a></p>
+          <p>Comptes de test :</p>
+          <ul>
+            <li><strong>Admin :</strong> admin&#64;competition.com / admin123</li>
+            <li><strong>Gestionnaire global :</strong> global&#64;competition.com / global123</li>
+            <li><strong>Gestionnaire local :</strong> local&#64;competition.com / local123</li>
+          </ul>
+          <p>Endpoints publics :</p>
+          <ul>
+            <li><strong>Soumettre une candidature :</strong> POST <code>/api/v1/public/postuler</code></li>
+            <li><strong>Suivre une candidature :</strong> GET <code>/api/v1/public/suivi/&#123;numero&#125;</code></li>
+            <li><strong>Liste des centres :</strong> GET <code>/api/v1/public/centres</code></li>
+            <li><strong>Liste des concours :</strong> GET <code>/api/v1/public/concours</code></li>
+            <li><strong>Liste des spécialités :</strong> GET <code>/api/v1/public/specialites</code></li>
+          </ul>
+          <p>Connexion :</p>
+          <ul>
+            <li><strong>Authentification :</strong> POST <code>/api/v1/auth/login</code></li>
+          </ul>
+        </div>
+      </section>
+
       <section class="available-concours">
         <div class="section-header">
           <div>
@@ -38,7 +64,7 @@ import { Concours } from '../../models/models';
         <div class="concours-list">
           <div class="concours-card" *ngFor="let concours of concoursList">
             <div class="concours-label">{{ concours.statut }}</div>
-            <h3>{{ concours.titre }}</h3>
+            <h3>{{ concours.nom }}</h3>
             <p>{{ concours.description }}</p>
             <div class="concours-meta">
               <span><strong>Début :</strong> {{ concours.dateDebutInscription }}</span>
@@ -77,6 +103,21 @@ import { Concours } from '../../models/models';
     .available-concours {
       margin-top: 2rem;
     }
+    .api-docs-card {
+      margin-top: 1.5rem;
+    }
+    .api-docs-card code {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.35rem;
+      background: rgba(15, 23, 42, 0.05);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    .api-docs-card a {
+      color: var(--primary);
+      text-decoration: none;
+    }
     .section-header {
       display: flex;
       justify-content: space-between;
@@ -101,7 +142,7 @@ import { Concours } from '../../models/models';
       display: inline-flex;
       padding: 0.35rem 0.75rem;
       border-radius: 999px;
-      background: rgba(59, 130, 246, 0.12);
+      background: rgba(249, 115, 22, 0.12);
       color: var(--primary);
       font-weight: 700;
       text-transform: uppercase;
@@ -125,7 +166,7 @@ export class HomeComponent {
   concoursList: Concours[] = [
     {
       id: 1,
-      titre: 'Concours d’entrée 2026',
+      nom: 'Concours d’entrée 2026',
       description: 'Recrutement national pour des spécialités en informatique, gestion et marketing.',
       dateConcours: '2026-09-25',
       dateDebutInscription: '2026-05-01',
@@ -134,7 +175,7 @@ export class HomeComponent {
     },
     {
       id: 2,
-      titre: 'Concours de la fonction publique',
+      nom: 'Concours de la fonction publique',
       description: 'Sélection des meilleurs profils pour les centres de Rabat et Casablanca.',
       dateConcours: '2026-11-15',
       dateDebutInscription: '2026-07-01',

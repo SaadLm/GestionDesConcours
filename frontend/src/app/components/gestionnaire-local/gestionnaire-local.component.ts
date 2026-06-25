@@ -51,7 +51,7 @@ import { Candidature, ApiResponse } from '../../models/models';
             <tr *ngFor="let candidature of candidatures">
               <td>{{ candidature.numeroCandidature || candidature.id }}</td>
               <td>{{ candidature.candidat.nom }} {{ candidature.candidat.prenom }}</td>
-              <td>{{ candidature.concours.titre }}</td>
+              <td>{{ candidature.concours.nom }}</td>
               <td>{{ candidature.specialite.nom }}</td>
               <td><span class="status {{ (candidature.statut || '').toLowerCase() }}">{{ candidature.statut || 'En cours' }}</span></td>
               <td>{{ candidature.commentaire }}</td>
@@ -133,8 +133,8 @@ import { Candidature, ApiResponse } from '../../models/models';
       color: #991b1b;
     }
     .status.en cours {
-      background: #eff6ff;
-      color: #1d4ed8;
+      background: rgba(249, 115, 22, 0.12);
+      color: var(--primary);
     }
     .places-card {
       margin-top: 2rem;
@@ -155,7 +155,7 @@ import { Candidature, ApiResponse } from '../../models/models';
       border-bottom: none;
     }
     .badge {
-      background: rgba(59, 130, 246, 0.12);
+      background: rgba(249, 115, 22, 0.12);
       color: var(--primary);
       padding: 0.5rem 0.85rem;
       border-radius: 999px;

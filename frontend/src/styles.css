@@ -1,19 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary: #0b3d91;
-  --primary-hover: #0a3579;
+  --primary: #f97316;
+  --primary-hover: #ea580c;
   --secondary: #334155;
-  --accent: #0f6cb5;
-  --background: #f3f4f6;
+  --accent: #fb923c;
+  --background: #fbf7f2;
   --surface: #ffffff;
   --text: #111827;
   --text-muted: #475569;
-  --border: #d1d5db;
+  --border: #e5e7eb;
   --error: #b91c1c;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
-  --shadow: 0 4px 8px rgba(15, 23, 42, 0.08);
-  --radius: 0.25rem;
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.08);
+  --shadow: 0 4px 10px rgba(17, 24, 39, 0.08);
+  --radius: 0.5rem;
 }
 
 * {
@@ -109,7 +109,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.16);
 }
 
 textarea {

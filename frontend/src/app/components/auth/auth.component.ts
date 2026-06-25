@@ -25,15 +25,14 @@ interface TestAccount {
         </div>
         <!-- <div class="test-note">
           <p><strong>Comptes de test :</strong></p>
-   
           <ul>
-            <li><strong>Gestionnaire local :</strong> "localATtest.gov" / local123</li>
-            <li><strong>Gestionnaire global :</strong> "globalATtest.gov" / global123</li>
-            <li><strong>Administrateur :</strong> "adminATtest.gov" / admin123</li>
+            <li><strong>Administrateur :</strong> admin@competition.com / admin123</li>
+            <li><strong>Gestionnaire global :</strong> global@competition.com / global123</li>
+            <li><strong>Gestionnaire local :</strong> local@competition.com / local123</li>
           </ul>
           <p>Appuyez sur un bouton pour remplir automatiquement un compte de test.</p>
         </div>
-      </div> -->
+      </div>  -->
 
       <div class="grid auth-grid">
         <section class="glass-card auth-card login-card">
@@ -114,8 +113,8 @@ interface TestAccount {
     }
     .test-note {
       min-width: 280px;
-      background: rgba(59, 130, 246, 0.1);
-      border: 1px solid rgba(59, 130, 246, 0.25);
+      background: rgba(249, 115, 22, 0.08);
+      border: 1px solid rgba(249, 115, 22, 0.25);
       border-radius: var(--radius);
       padding: 1rem 1.25rem;
       color: var(--text);
@@ -158,9 +157,9 @@ interface TestAccount {
       margin-top: 1.5rem;
       padding: 1rem;
       border-radius: var(--radius);
-      background: #eff6ff;
-      color: #1d4ed8;
-      border: 1px solid #93c5fd;
+      background: rgba(249, 115, 22, 0.12);
+      color: var(--primary);
+      border: 1px solid rgba(249, 115, 22, 0.25);
     }
     @media (max-width: 900px) {
       .auth-grid {

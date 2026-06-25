@@ -68,7 +68,7 @@ import { Router } from '@angular/router';
             <div class="input-group">
               <label>Concours *</label>
               <select formControlName="concoursId">
-                <option *ngFor="let concours of concoursList" [value]="concours.id">{{ concours.titre }}</option>
+                <option *ngFor="let concours of concoursList" [value]="concours.id">{{ concours.nom }}</option>
               </select>
             </div>
 
@@ -240,7 +240,7 @@ export class InscriptionComponent implements OnInit {
   loading = false;
   errorMessage = '';
   concoursList: Concours[] = [
-    { id: 1, titre: 'Concours d’entrée 2026', description: 'Concours national', dateConcours: '2026-09-25', dateDebutInscription: '2026-05-01', dateFinInscription: '2026-09-10', statut: 'Ouvert' }
+    { id: 1, nom: 'Concours d’entrée 2026', description: 'Concours national', dateConcours: '2026-09-25', dateDebutInscription: '2026-05-01', dateFinInscription: '2026-09-10', statut: 'Ouvert' }
   ];
   specialiteList: Specialite[] = [
     { id: 1, nom: 'Informatique' },
