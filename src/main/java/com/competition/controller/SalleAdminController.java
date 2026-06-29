@@ -15,13 +15,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/salles")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
 public class SalleAdminController {
 
     private final SalleRepository salleRepository;
     private final CentreRepository centreRepository;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_GLOBAL')")
     public ResponseEntity<ApiResponse<List<Salle>>> getAllSalles() {
         List<Salle> salles = salleRepository.findAll();
         return ResponseEntity.ok(ApiResponse.<List<Salle>>builder()
@@ -32,6 +32,7 @@ public class SalleAdminController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_GLOBAL')")
     public ResponseEntity<ApiResponse<Salle>> getSalleById(@PathVariable Long id) {
         Salle salle = salleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Salle non trouvée."));
@@ -43,6 +44,7 @@ public class SalleAdminController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Salle>> createSalle(@RequestBody Salle salle) {
         Long centreId = salle.getCentre() != null ? salle.getCentre().getId() : null;
         if (centreId == null) {
@@ -62,6 +64,7 @@ public class SalleAdminController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Salle>> updateSalle(@PathVariable Long id, @RequestBody Salle request) {
         Salle salle = salleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Salle non trouvée."));
@@ -83,6 +86,7 @@ public class SalleAdminController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteSalle(@PathVariable Long id) {
         salleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Salle non trouvée."));

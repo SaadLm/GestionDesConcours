@@ -32,7 +32,7 @@
 
 .sidebar-nav a {
   display: block;
-  color: rgba(255,255,255,0.84);
+  color: rgba(0,0,0,0.84);
   text-decoration: none;
   font-weight: 600;
   padding: 0.9rem 1rem;
@@ -105,4 +105,19 @@ main {
   .sidebar-note {
     display: none;
   }
+}
+
+.sidebar-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image: url('../../public/logo.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 4rem;
+  padding: 1rem;
+  cursor: pointer;
+  /* margin-bottom: 1rem; */
 }

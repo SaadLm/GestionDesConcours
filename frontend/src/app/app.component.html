@@ -1,6 +1,8 @@
 <div class="app-shell">
   <aside class="sidebar">
-    <div class="sidebar-brand font-outfit">Concours<span>Hub</span></div>
+    <!-- <div class="sidebar-brand font-outfit">Concours<span>Hub</span></div> -->
+    <div a routerLink="/" routerLinkActive="active" class="font-outfit sidebar-logo"></div>
+
 
     <ng-container *ngIf="user$ | async as user; else publicNav">
       <div class="sidebar-role">
@@ -9,9 +11,9 @@
       </div>
       <nav class="sidebar-nav">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Accueil</a>
-        <a *ngIf="user.profile === 'Gestionnaire local'" routerLink="/gestionnaire-local" routerLinkActive="active">Mon centre</a>
+        <a *ngIf="user.profile === 'Gestionnaire local'" routerLink="/gestionnaire-local" routerLinkActive="active">Supervision</a>
         <a *ngIf="user.profile === 'Gestionnaire global'" routerLink="/gestionnaire-global" routerLinkActive="active">Supervision</a>
-        <a *ngIf="user.profile === 'Administrateur'" routerLink="/administrateur" routerLinkActive="active">Administration</a>
+        <a *ngIf="user.profile === 'Administrateur'" routerLink="/administrateur" routerLinkActive="active">Supervision</a>
       </nav>
       <button class="btn btn-secondary logout-btn" (click)="logout()">Déconnexion</button>
     </ng-container>

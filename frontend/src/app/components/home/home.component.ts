@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Concours } from '../../models/models';
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-home',
@@ -10,7 +11,7 @@ import { Concours } from '../../models/models';
   template: `
     <div class="container fade-in">
       <header class="hero">
-        <h1 class="font-outfit">Ministère de l'Economie et des Finances</h1>
+        <h1 class="font-outfit text-center">Ministère de l'Economie et des Finances</h1>
         <p>Bienvenue sur la plateforme nationale de gestion des concours, dédiée à la modernisation du recrutement public et au suivi des candidatures des futures générations de fonctionnaires.</p>
       </header>
 
@@ -25,7 +26,7 @@ import { Concours } from '../../models/models';
           <p>Accompagner les candidats, améliorer la transparence du processus et garantir une gestion efficace des concours à l’échelle nationale.</p>
         </div>
       </section>
-
+<!-- 
       <section class="api-docs-card">
         <div class="glass-card overview-card">
           <h2>Documentation API</h2>
@@ -50,9 +51,15 @@ import { Concours } from '../../models/models';
             <li><strong>Authentification :</strong> POST <code>/api/v1/auth/login</code></li>
           </ul>
         </div>
-      </section>
+      </section> -->
 
       <section class="available-concours">
+          <div *ngIf="concoursList.length === 0" class="alert alert-warning">
+            Aucun concours disponible.
+          </div>
+          <div *ngIf="errorConcours" class="alert alert-warning">
+            {{errorConcours}}
+          </div>
         <div class="section-header">
           <div>
             <h2>Concours disponibles</h2>
@@ -163,24 +170,47 @@ import { Concours } from '../../models/models';
   `]
 })
 export class HomeComponent {
-  concoursList: Concours[] = [
-    {
-      id: 1,
-      nom: 'Concours d’entrée 2026',
-      description: 'Recrutement national pour des spécialités en informatique, gestion et marketing.',
-      dateConcours: '2026-09-25',
-      dateDebutInscription: '2026-05-01',
-      dateFinInscription: '2026-09-10',
-      statut: 'Ouvert'
-    },
-    {
-      id: 2,
-      nom: 'Concours de la fonction publique',
-      description: 'Sélection des meilleurs profils pour les centres de Rabat et Casablanca.',
-      dateConcours: '2026-11-15',
-      dateDebutInscription: '2026-07-01',
-      dateFinInscription: '2026-11-01',
-      statut: 'Prochain'
-    }
-  ];
+  concoursList:Concours []= [];
+
+  loadingConcours = false;
+  errorConcours = null;
+
+  ngOnInit(): void {
+    this.loadConcours();
+  }
+
+  constructor(private api: ApiService) {}
+  loadConcours() {
+    this.loadingConcours = true;
+    this.api.getConcours().subscribe({
+      next: (res) => {
+        this.concoursList = res.data || [];
+        this.loadingConcours = false;
+      },
+      error: (error) => {
+        this.errorConcours = error;
+        this.loadingConcours = false;
+      }
+    });
+  // concoursList: Concours[] = [
+  //   {
+  //     id: 1,
+  //     nom: 'Concours d’entrée 2026',
+  //     description: 'Recrutement national pour des spécialités en informatique, gestion et marketing.',
+  //     dateConcours: '2026-09-25',
+  //     dateDebutInscription: '2026-05-01',
+  //     dateFinInscription: '2026-09-10',
+  //     statut: 'Ouvert'
+  //   },
+  //   {
+  //     id: 2,
+  //     nom: 'Concours de la fonction publique',
+  //     description: 'Sélection des meilleurs profils pour les centres de Rabat et Casablanca.',
+  //     dateConcours: '2026-11-15',
+  //     dateDebutInscription: '2026-07-01',
+  //     dateFinInscription: '2026-11-01',
+  //     statut: 'Prochain'
+  //   }
+  // ];
+}
 }

@@ -51,6 +51,22 @@ export class AuthService {
     return this.userSubject.value;
   }
 
+  isAdmin(): boolean {
+    return this.currentUser?.profile === 'Administrateur';
+  }
+
+  isGlobalManager(): boolean {
+    return this.currentUser?.profile === 'Gestionnaire global';
+  }
+
+  isLocalManager(): boolean {
+    return this.currentUser?.profile === 'Gestionnaire local';
+  }
+
+  canManagePlatform(): boolean {
+    return this.isAdmin();
+  }
+
   private decodeRoleFromToken(token: string): RoleType | undefined {
     try {
       const parts = token.split('.');

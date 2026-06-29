@@ -20,7 +20,8 @@ export interface Specialite {
 
 export interface Concours {
   id?: number;
-  nom: string;
+  nom?: string;
+  titre?: string;
   description?: string;
   dateConcours: string;
   dateDebutInscription: string;
@@ -28,6 +29,25 @@ export interface Concours {
   statut: string;
   specialites?: Specialite[];
   centres?: Centre[];
+}
+
+export interface CentreSpecialiteAllocation {
+  id?: number;
+  centreId?: number;
+  centreName?: string;
+  specialite?: Specialite;
+  specialiteId?: number;
+  nombrePlaces: number;
+}
+
+export interface ReportData {
+  type?: string;
+  generatedAt?: string;
+  totalCandidatures?: number;
+  validees?: number;
+  rejetees?: number;
+  enAttente?: number;
+  tauxReussite?: string;
 }
 
 export interface Diplome {
@@ -83,6 +103,8 @@ export interface UserBase {
   nom: string;
   prenom?: string;
   role: RoleType;
+  centreId?: number;
+  centre?: Pick<Centre, 'id' | 'nom' | 'ville'>;
 }
 
 export interface GestionnaireLocal extends UserBase {
