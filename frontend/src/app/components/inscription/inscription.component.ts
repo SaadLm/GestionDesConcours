@@ -333,17 +333,24 @@ export class InscriptionComponent implements OnInit {
         lieuNaissance: val.lieuNaissance,
         adresse: val.adresse,
         email: val.email,
-        telephone: val.telephone
+        telephone: val.telephone,
+        diplomes: [
+          {
+            nomDiplome: val.intituleDiplome,
+            niveau: val.niveau,
+            specialite: val.specialiteDiplome,
+            anneeObtention: +val.anneeObtention
+          }
+        ]
       },
       concours: { id: +val.concoursId },
       specialite: { id: +val.specialiteId },
       centre: { id: +val.centreId },
       diplome: {
-        intitule: val.intituleDiplome,
+        nomDiplome: val.intituleDiplome,
         niveau: val.niveau,
-        etablissement: val.etablissement,
-        anneeObtention: val.anneeObtention,
-        specialite: val.specialiteDiplome
+        specialite: val.specialiteDiplome,
+        anneeObtention: +val.anneeObtention
       },
       experienceProfessionnelle: val.experienceProfessionnelle,
       documents: {

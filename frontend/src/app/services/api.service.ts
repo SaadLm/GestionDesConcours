@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiResponse, Candidature, Centre, CentreSpecialiteAllocation, Concours, ReportData, Specialite, UserBase } from '../models/models';
 
@@ -37,9 +37,15 @@ export class ApiService {
   }
 
   // Manager Endpoints (Requires Auth)
-  getCandidatures(centreId?: number): Observable<ApiResponse<Candidature[]>> {
-    const url = centreId ? `${this.baseUrl}/manager/candidatures?centreId=${centreId}` : `${this.baseUrl}/manager/candidatures`;
-    return this.http.get<ApiResponse<Candidature[]>>(url);
+  getCandidatures(centreId?: number, concoursId?: number): Observable<ApiResponse<Candidature[]>> {
+    let params = new HttpParams();
+    if (centreId != null) {
+      params = params.set('centreId', String(centreId));
+    }
+    if (concoursId != null) {
+      params = params.set('concoursId', String(concoursId));
+    }
+    return this.http.get<ApiResponse<Candidature[]>>(`${this.baseUrl}/manager/candidatures`, { params });
   }
 
   validerCandidature(id: number): Observable<ApiResponse<void>> {
@@ -120,6 +126,18 @@ export class ApiService {
   // Admin centres
   getAdminCentres(): Observable<ApiResponse<Centre[]>> {
     return this.http.get<ApiResponse<Centre[]>>(`${this.baseUrl}/admin/centres`);
+  }
+
+  createCentre(payload: Centre): Observable<ApiResponse<Centre>> {
+    return this.http.post<ApiResponse<Centre>>(`${this.baseUrl}/admin/centres`, payload);
+  }
+
+  updateCentre(id: number, payload: Centre): Observable<ApiResponse<Centre>> {
+    return this.http.put<ApiResponse<Centre>>(`${this.baseUrl}/admin/centres/${id}`, payload);
+  }
+
+  deleteCentre(id: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/admin/centres/${id}`);
   }
 
   // Admin specialty allocations

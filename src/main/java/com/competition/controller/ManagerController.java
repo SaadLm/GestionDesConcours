@@ -22,10 +22,13 @@ public class ManagerController {
     @GetMapping("/candidatures")
     @PreAuthorize("hasAnyRole('GESTIONNAIRE_LOCAL', 'GESTIONNAIRE_GLOBAL', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<Candidature>>> getCandidatures(
-            @RequestParam(required = false) Long centreId) {
+            @RequestParam(required = false) Long centreId,
+            @RequestParam(required = false) Long concoursId) {
 
         List<Candidature> list;
-        if (centreId != null) {
+        if (concoursId != null) {
+            list = candidatureRepository.findByConcoursIdWithCandidateDiplomes(concoursId);
+        } else if (centreId != null) {
             list = candidatureRepository.findByCentreId(centreId);
         } else {
             list = candidatureRepository.findAll();

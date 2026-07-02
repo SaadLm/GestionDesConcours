@@ -51,11 +51,11 @@ export interface ReportData {
 }
 
 export interface Diplome {
-  intitule: string;
+  id?: number;
+  nomDiplome: string;
   niveau: string;
-  etablissement: string;
-  anneeObtention: number;
   specialite: string;
+  anneeObtention: number;
 }
 
 export interface DocumentReference {
@@ -74,6 +74,7 @@ export interface Candidat {
   adresse: string;
   email: string;
   telephone: string;
+  diplomes?: Diplome[];
 }
 
 export interface Candidature {

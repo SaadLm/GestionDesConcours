@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
-import { Concours } from '../../models/models';
+import { Concours, Candidature } from '../../models/models';
 
 @Component({
   selector: 'app-competition-management',
@@ -48,9 +48,59 @@ import { Concours } from '../../models/models';
             </div>
             <div class="card-actions" *ngIf="canManage">
               <button class="btn btn-primary btn-sm" (click)="editConcours(comp)">✏️ Éditer</button>
+              <button class="btn btn-secondary btn-sm" (click)="toggleCandidates(comp)">
+                {{ activeConcoursId === comp.id ? '🔽 Masquer candidats' : '👥 Voir candidats' }}
+              </button>
               <button class="btn btn-danger btn-sm" (click)="deleteConcours(comp.id!)">🗑️ Supprimer</button>
             </div>
           </div>
+        </div>
+      </section>
+
+      <div class="overlay-backdrop" *ngIf="activeConcoursId" (click)="closeCandidates()"></div>
+      <section class="candidates-overlay" *ngIf="activeConcoursId && selectedConcours" (click)="$event.stopPropagation()">
+        <div class="overlay-header">
+          <div>
+            <h3>Candidats pour «{{ selectedConcours.titre || 'Concours' }}»</h3>
+            <p class="muted">Liste des candidatures enregistrées et actions de validation.</p>
+          </div>
+          <button class="close-btn" type="button" (click)="closeCandidates()">✕</button>
+        </div>
+
+        <div *ngIf="loadingCandidates" class="loading-state">
+          <div class="spinner"></div>
+          <p>Chargement des candidatures...</p>
+        </div>
+        <div *ngIf="!loadingCandidates && candidatureList.length === 0" class="empty-state">
+          <p>Aucune candidature liée à ce concours pour le moment.</p>
+        </div>
+        <div *ngIf="!loadingCandidates && candidatureList.length > 0" class="candidates-grid">
+          <article class="candidate-card" *ngFor="let candidate of candidatureList">
+            <div class="candidate-summary">
+              <h5>{{ candidate.candidat.prenom }} {{ candidate.candidat.nom }}</h5>
+              <p><strong>CIN :</strong> {{ candidate.candidat.cin }}</p>
+              <p><strong>Statut :</strong> {{ candidate.statut || 'EN_ATTENTE' }}</p>
+              <p><strong>Commentaire :</strong> {{ candidate.commentaire || 'Aucun' }}</p>
+            </div>
+            <div class="candidate-details">
+              <p><strong>Email :</strong> {{ candidate.candidat.email }}</p>
+              <p><strong>Téléphone :</strong> {{ candidate.candidat.telephone }}</p>
+              <p><strong>Centre :</strong> {{ candidate.centre.nom }}</p>
+              <p><strong>Spécialité :</strong> {{ candidate.specialite.nom }}</p>
+              <div class="diplomas" *ngIf="candidate.candidat.diplomes && candidate.candidat.diplomes.length > 0">
+                <strong>Diplômes :</strong>
+                <ul>
+                  <li *ngFor="let diplome of candidate.candidat.diplomes">
+                    {{ diplome.nomDiplome }} - {{ diplome.niveau }} ({{ diplome.anneeObtention }})
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="candidate-actions">
+              <button class="btn btn-success btn-sm" (click)="acceptCandidate(candidate)">✅ Accepter</button>
+              <button class="btn btn-danger btn-sm" (click)="declineCandidate(candidate)">❌ Refuser</button>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -374,6 +424,71 @@ import { Concours } from '../../models/models';
       text-align: center;
       color: var(--text-muted);
     }
+    .overlay-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      z-index: 20;
+    }
+    .candidates-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(95vw, 900px);
+      max-height: 85vh;
+      overflow: auto;
+      padding: 1.5rem;
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: 0 24px 80px rgba(15, 23, 42, 0.25);
+      z-index: 30;
+    }
+    .overlay-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .overlay-header h3 {
+      margin: 0;
+    }
+    .close-btn {
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 1.5rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .candidates-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    .candidate-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem;
+      background: rgba(248, 250, 252, 0.98);
+      display: grid;
+      gap: 1rem;
+    }
+    .candidate-summary,
+    .candidate-details {
+      display: grid;
+      gap: 0.35rem;
+    }
+    .candidate-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .diplomas ul {
+      margin: 0.5rem 0 0;
+      padding-left: 1.2rem;
+    }
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
@@ -399,6 +514,10 @@ export class CompetitionManagementComponent implements OnInit {
   editingConcours: Concours | null = null;
   formConcours: Concours = this.emptyForm();
   canManage = false;
+  activeConcoursId?: number;
+  selectedConcours?: Concours;
+  candidatureList: Candidature[] = [];
+  loadingCandidates = false;
 
   loadingConcours = false;
   savingConcours = false;
@@ -409,7 +528,7 @@ export class CompetitionManagementComponent implements OnInit {
   constructor(private api: ApiService, private auth: AuthService) {}
 
   ngOnInit(): void {
-    this.canManage = this.auth.canManagePlatform();
+    this.canManage = this.auth.isAdmin() || this.auth.isGlobalManager();
     this.loadConcours();
   }
 
@@ -446,6 +565,56 @@ export class CompetitionManagementComponent implements OnInit {
   editConcours(comp: Concours): void {
     this.editingConcours = comp;
     this.formConcours = { ...comp };
+  }
+
+  toggleCandidates(comp: Concours): void {
+    if (this.activeConcoursId === comp.id) {
+      this.closeCandidates();
+      return;
+    }
+    this.activeConcoursId = comp.id;
+    this.selectedConcours = comp;
+    this.loadCandidates(comp.id!);
+  }
+
+  closeCandidates(): void {
+    this.activeConcoursId = undefined;
+    this.selectedConcours = undefined;
+    this.candidatureList = [];
+  }
+
+  loadCandidates(concoursId: number): void {
+    this.loadingCandidates = true;
+    this.api.getCandidatures(undefined, concoursId).subscribe({
+      next: (res) => {
+        this.candidatureList = res.data || [];
+        this.loadingCandidates = false;
+      },
+      error: () => {
+        this.candidatureList = [];
+        this.loadingCandidates = false;
+      }
+    });
+  }
+
+  acceptCandidate(candidate: Candidature): void {
+    if (!candidate.id) return;
+    this.api.validerCandidature(candidate.id).subscribe({
+      next: () => this.loadCandidates(candidate.concours.id!),
+      error: () => window.alert('Erreur lors de l’acceptation de la candidature.')
+    });
+  }
+
+  declineCandidate(candidate: Candidature): void {
+    if (!candidate.id) return;
+    const commentaire = window.prompt('Motif du refus :', candidate.commentaire || '');
+    if (commentaire === null) {
+      return;
+    }
+    this.api.rejeterCandidature(candidate.id, commentaire).subscribe({
+      next: () => this.loadCandidates(candidate.concours.id!),
+      error: () => window.alert('Erreur lors du refus de la candidature.')
+    });
   }
 
   cancelEdit(): void {

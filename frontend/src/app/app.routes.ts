@@ -10,6 +10,9 @@ import { RolesAccessComponent } from './components/administrateur/roles-access.c
 import { PlatformSettingsComponent } from './components/administrateur/platform-settings.component';
 import { CompetitionManagementComponent } from './components/administrateur/competition-management.component';
 import { SpecialtyAllocationComponent } from './components/administrateur/specialty-allocation.component';
+import { SpecialtyManagementComponent } from './components/administrateur/specialty-management.component';
+import { CentresManagementComponent } from './components/administrateur/centres-management.component';
+import { CentreAssignmentsComponent } from './components/administrateur/centre-assignments.component';
 import { ReportsStatisticsComponent } from './components/administrateur/reports-statistics.component';
 import { adminOnlyGuard, supervisionGuard } from './guards/role.guard';
 
@@ -28,7 +31,10 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'competitions', pathMatch: 'full' },
       { path: 'competitions', component: CompetitionManagementComponent },
-      { path: 'specialties', component: SpecialtyAllocationComponent },
+      { path: 'specialties', component: SpecialtyManagementComponent },
+      { path: 'specialty-allocations', component: SpecialtyAllocationComponent },
+      { path: 'centres', component: CentresManagementComponent },
+      { path: 'centre-assignments', component: CentreAssignmentsComponent },
       { path: 'reports', component: ReportsStatisticsComponent }
     ]
   },
@@ -43,7 +49,10 @@ export const routes: Routes = [
       { path: 'roles', component: RolesAccessComponent, canActivate: [adminOnlyGuard] },
       { path: 'settings', component: PlatformSettingsComponent, canActivate: [adminOnlyGuard] },
       { path: 'competitions', component: CompetitionManagementComponent },
-      { path: 'specialties', component: SpecialtyAllocationComponent },
+      { path: 'specialties', component: SpecialtyManagementComponent },
+      { path: 'specialty-allocations', component: SpecialtyAllocationComponent },
+      { path: 'centres', component: CentresManagementComponent },
+      { path: 'centre-assignments', component: CentreAssignmentsComponent },
       { path: 'reports', component: ReportsStatisticsComponent }
     ]
   },

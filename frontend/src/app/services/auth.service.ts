@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, map } from 'rxjs';
+import { BehaviorSubject, Observable, map, of, finalize } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { RoleType } from '../models/models';
 
@@ -41,10 +41,24 @@ export class AuthService {
     );
   }
 
-  logout(): void {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_email');
-    this.userSubject.next(null);
+  logout(): Observable<void> {
+    const token = localStorage.getItem('auth_token');
+
+    const clearSession = (): void => {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_email');
+      this.userSubject.next(null);
+    };
+
+    if (!token) {
+      clearSession();
+      return of(void 0);
+    }
+
+    return this.http.post<{ message?: string }>(`${this.baseUrl}/auth/logout`, {}).pipe(
+      finalize(() => clearSession()),
+      map(() => void 0)
+    );
   }
 
   get currentUser(): UserSession | null {

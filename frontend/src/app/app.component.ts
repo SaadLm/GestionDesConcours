@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService, UserSession } from './services/auth.service';
 import { Observable } from 'rxjs';
@@ -14,11 +14,16 @@ import { Observable } from 'rxjs';
 export class AppComponent {
   user$: Observable<UserSession | null>;
 
-  constructor(private authService: AuthService) {
+  constructor(private authService: AuthService, private router: Router) {
     this.user$ = this.authService.user$;
   }
 
-  logout() {
-    this.authService.logout();
+  logout(): void {
+    this.authService.logout().subscribe({
+      next: () => this.router.navigate(['/']),
+      error: () => {
+        this.router.navigate(['/']);
+      }
+    });
   }
 }

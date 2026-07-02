@@ -33,9 +33,34 @@ public class CandidatureService {
         // 2. Génération du numéro unique (Règle 1)
         candidature.setNumeroCandidature(genererNumeroUnique());
 
-        // 3. Sauvegarde du candidat s'il n'existe pas
+        // 3. Sauvegarde du candidat s'il n'existe pas ou mise à jour de ses diplômes
         Candidat candidat = candidatRepository.findByCin(candidature.getCandidat().getCin())
-                .orElseGet(() -> candidatRepository.save(candidature.getCandidat()));
+                .orElseGet(() -> {
+                    Candidat newCandidat = candidature.getCandidat();
+                    if (newCandidat.getDiplomes() != null) {
+                        newCandidat.getDiplomes().forEach(d -> d.setCandidat(newCandidat));
+                    }
+                    return candidatRepository.save(newCandidat);
+                });
+
+        if (candidature.getCandidat().getDiplomes() != null) {
+            final Candidat finalCandidat = candidat;
+            if (finalCandidat.getDiplomes() == null) {
+                finalCandidat.setDiplomes(new java.util.ArrayList<>());
+            }
+            candidature.getCandidat().getDiplomes().forEach(d -> {
+                boolean exists = finalCandidat.getDiplomes().stream()
+                        .anyMatch(existing -> existing.getNomDiplome().equalsIgnoreCase(d.getNomDiplome())
+                                && existing.getNiveau().equalsIgnoreCase(d.getNiveau())
+                                && existing.getSpecialite().equalsIgnoreCase(d.getSpecialite()));
+                if (!exists) {
+                    d.setCandidat(finalCandidat);
+                    finalCandidat.getDiplomes().add(d);
+                }
+            });
+            candidat = candidatRepository.save(finalCandidat);
+        }
+
         candidature.setCandidat(candidat);
 
         return candidatureRepository.save(candidature);

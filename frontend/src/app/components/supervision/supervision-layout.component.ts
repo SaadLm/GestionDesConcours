@@ -99,13 +99,19 @@ export class SupervisionLayoutComponent implements OnInit {
     { label: 'Rôles et Accès', route: 'roles', icon: '🔐', description: 'Gérer les rôles et les droits d\'accès' },
     { label: 'Paramètres Plateforme', route: 'settings', icon: '⚙️', description: 'Configuration générale de la plateforme' },
     { label: 'Concours', route: 'competitions', icon: '📋', description: 'Configuration des concours' },
-    { label: 'Allocation Spécialités', route: 'specialties', icon: '🎯', description: 'Attribution des spécialités aux centres' },
+    { label: 'Spécialités', route: 'specialties', icon: '🎯', description: 'Créer, modifier et supprimer les spécialités' },
+    { label: 'Centres', route: 'centres', icon: '🏛️', description: 'Gérer les centres d\'examen' },
+    { label: 'Affectations salles', route: 'centre-assignments', icon: '🪑', description: 'Voir les candidats par centre et changer la salle' },
+    { label: 'Allocations', route: 'specialty-allocations', icon: '🧾', description: 'Attribuer les spécialités aux centres' },
     { label: 'Rapports & Statistiques', route: 'reports', icon: '📊', description: 'Génération de rapports et statistiques' }
   ];
 
   private readonly globalTabs: SupervisionTab[] = [
     { label: 'Concours', route: 'competitions', icon: '📋', description: 'Consultation des concours' },
-    { label: 'Allocation Spécialités', route: 'specialties', icon: '🎯', description: 'Consultation des allocations par centre' },
+    { label: 'Spécialités', route: 'specialties', icon: '🎯', description: 'Gérer les spécialités' },
+    { label: 'Centres', route: 'centres', icon: '🏛️', description: 'Gérer les centres d\'examen' },
+    { label: 'Affectations salles', route: 'centre-assignments', icon: '🪑', description: 'Suivre les candidats et leurs salles' },
+    { label: 'Allocations', route: 'specialty-allocations', icon: '🧾', description: 'Consulter les allocations par centre' },
     { label: 'Rapports & Statistiques', route: 'reports', icon: '📊', description: 'Génération de rapports et statistiques' }
   ];
 

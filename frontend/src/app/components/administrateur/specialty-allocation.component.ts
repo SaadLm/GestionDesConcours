@@ -262,7 +262,6 @@ interface AllocationRow extends CentreSpecialiteAllocation {
       left: 0;
       top: 0;
       height: 100%;
-      // background: linear-gradient(90deg, var(--primary), #f97316); 
       background: linear-gradient(90deg, var(--primary), #1680f9);
       transition: width 0.3s ease;
       border-radius: 12px;

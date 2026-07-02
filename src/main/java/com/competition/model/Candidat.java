@@ -40,6 +40,5 @@ public class Candidat {
     private String telephone;
 
     @OneToMany(mappedBy = "candidat", cascade = CascadeType.ALL)
-    @JsonIgnore
     private List<Diplome> diplomes;
 }

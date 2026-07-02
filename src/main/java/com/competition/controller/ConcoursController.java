@@ -40,7 +40,7 @@ public class ConcoursController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_GLOBAL')")
     public ResponseEntity<ApiResponse<Concours>> createConcours(@RequestBody Concours concours) {
         Concours saved = concoursRepository.save(concours);
         return ResponseEntity.ok(ApiResponse.<Concours>builder()
@@ -51,7 +51,7 @@ public class ConcoursController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_GLOBAL')")
     public ResponseEntity<ApiResponse<Concours>> updateConcours(
             @PathVariable Long id, @RequestBody Concours concoursDetails) {
         Concours concours = concoursRepository.findById(id)
