@@ -115,12 +115,28 @@ public class CandidatureService {
         candidatureRepository.save(candidature);
 
         
-            emailService.sendSimpleEmail(
+            String htmlBody = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto;'>"
+    + "<div style='background-color: #16a34a; padding: 20px; text-align: center;'>"
+    + "<h1 style='color: #ffffff; margin: 0;'>Concours - Ministère des Finances</h1>"
+    + "</div>"
+    + "<div style='padding: 25px; border: 1px solid #e5e7eb; border-top: none;'>"
+    + "<h2 style='color: #166534;'>Candidature validée</h2>"
+    + "<p>Bonjour " + candidature.getCandidat().getNom() + " " + candidature.getCandidat().getPrenom() + ",</p>"
+    + "<p>Nous avons le plaisir de vous informer que votre candidature a été <strong>validée</strong> avec succès.</p>"
+    + "<p><strong>Numéro de suivi :</strong> " + candidature.getNumeroCandidature() + "</p>"
+    + "<p>Vous pouvez suivre l'évolution de votre dossier à tout moment à l'aide de ce numéro sur notre plateforme.</p>"
+    + "<p>Nous vous tiendrons informé(e) des prochaines étapes (convocation, centre d'examen, etc.) dans les meilleurs délais.</p>"
+    + "<p style='margin-top: 30px;'>Cordialement,<br>L'équipe de gestion des concours</p>"
+    + "</div>"
+    + "<div style='background-color: #f3f4f6; padding: 15px; text-align: center; font-size: 0.85em; color: #6b7280;'>"
+    + "Ceci est un message automatique, merci de ne pas y répondre directement."
+    + "</div>"
+    + "</div>";
+        emailService.sendHtmlEmail(
             candidature.getCandidat().getEmail(),
             "Votre candidature a été validée",
-            "Bonjour " + candidature.getCandidat().getNom() +
-            ",\n\nVotre candidature (numéro " + candidature.getNumeroCandidature() +
-            ") a été validée avec succès."
+            htmlBody
+        
         );
     
 
