@@ -34,7 +34,7 @@ interface TestAccount {
         </div>
       </div>  -->
 
-      <div class="grid auth-grid">
+      <div class="grid m-auto">
         <section class="glass-card auth-card login-card">
           <h2>Connexion de test</h2>
           <form (ngSubmit)="login()">
@@ -60,7 +60,7 @@ interface TestAccount {
           </div>
         </section>
 
-        <section class="glass-card auth-card profile-card">
+        <!-- <section class="glass-card auth-card profile-card">
           <h2>Fonctionnalités par profil</h2>
           <div class="profile-section">
             <h3>Gestionnaire local</h3>
@@ -92,7 +92,7 @@ interface TestAccount {
               <li>Configuration générale de la plateforme</li>
             </ul>
           </div>
-        </section>
+        </section> -->
       </div>
     </div>
   `,
@@ -133,7 +133,7 @@ interface TestAccount {
       padding: 2rem;
     }
     .login-card {
-      min-width: 320px;
+      min-width: 100%;
     }
     .quick-buttons {
       display: grid;

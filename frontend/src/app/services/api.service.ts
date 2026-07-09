@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ApiResponse, Candidature, Centre, CentreSpecialiteAllocation, Concours, ReportData, Specialite, UserBase } from '../models/models';
+import { ApiResponse, Candidature, Centre, CentreSpecialiteAllocation, Concours, ConcoursOption, ReportData, Specialite, UserBase } from '../models/models';
 
 @Injectable({
   providedIn: 'root'
@@ -34,6 +34,10 @@ export class ApiService {
 
   getCentres(): Observable<ApiResponse<Centre[]>> {
     return this.http.get<ApiResponse<Centre[]>>(`${this.baseUrl}/public/centres`);
+  }
+
+  getConcoursOptions(): Observable<ApiResponse<ConcoursOption[]>> {
+    return this.http.get<ApiResponse<ConcoursOption[]>>(`${this.baseUrl}/public/concours-options`);
   }
 
   // Manager Endpoints (Requires Auth)

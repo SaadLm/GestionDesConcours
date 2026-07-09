@@ -5,6 +5,8 @@ import com.competition.model.*;
 import com.competition.repository.*;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,6 +68,9 @@ public class CandidatureService {
         return candidatureRepository.save(candidature);
     }
 
+
+    @Autowired
+    private EmailService emailService;
     @Transactional
     public void validerCandidature(Long candidatureId) {
         Candidature candidature = candidatureRepository.findById(candidatureId)
@@ -108,6 +113,53 @@ public class CandidatureService {
         candidature.setSalle(assignedSalle);
         candidature.setStatut(StatutCandidature.VALIDEE);
         candidatureRepository.save(candidature);
+
+        
+            emailService.sendSimpleEmail(
+            candidature.getCandidat().getEmail(),
+            "Votre candidature a été validée",
+            "Bonjour " + candidature.getCandidat().getNom() +
+            ",\n\nVotre candidature (numéro " + candidature.getNumeroCandidature() +
+            ") a été validée avec succès."
+        );
+    
+
+    }
+
+    @Transactional
+    public void rejeterCandidature(Long candidatureId, String commentaire) {
+        Candidature candidature = candidatureRepository.findById(candidatureId)
+                .orElseThrow(() -> new BusinessException("Candidature non trouvée."));
+
+        candidature.setStatut(StatutCandidature.REJETEE);
+        candidature.setCommentaire(commentaire);
+
+        candidatureRepository.save(candidature);
+        String htmlBody = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto;'>"
+            + "<div style='background-color: #f97316; padding: 20px; text-align: center;'>"
+            + "<h1 style='color: #ffffff; margin: 0;'>Concours - Ministère des Finances</h1>"
+            + "</div>"
+            + "<div style='padding: 25px; border: 1px solid #e5e7eb; border-top: none;'>"
+            + "<h2 style='color: #991b1b;'>Statut de votre candidature</h2>"
+            + "<p>Bonjour " + candidature.getCandidat().getNom() + " " + candidature.getCandidat().getPrenom() + ",</p>"
+            + "<p>Nous vous remercions pour l'intérêt que vous avez porté à ce concours et pour le temps consacré à votre candidature.</p>"
+            + "<p>Après étude de votre dossier (numéro <strong>" + candidature.getNumeroCandidature() + "</strong>), "
+            + "nous sommes au regret de vous informer que celui-ci n'a pas été retenu pour cette session.</p>"
+            + "<p>Nous vous encourageons à consulter les prochaines sessions de concours qui pourraient correspondre à votre profil.</p>"
+            + "<p>Nous vous souhaitons plein succès dans vos démarches futures.</p>"
+            + "<p style='margin-top: 30px;'>Cordialement,<br>L'équipe de gestion des concours</p>"
+            + "</div>"
+            + "<div style='background-color: #f3f4f6; padding: 15px; text-align: center; font-size: 0.85em; color: #6b7280;'>"
+            + "Ceci est un message automatique, merci de ne pas y répondre directement."
+            + "</div>"
+            + "</div>";
+
+    
+        emailService.sendHtmlEmail(
+            candidature.getCandidat().getEmail(),
+            "Résultat de votre candidature",
+            htmlBody
+        );
     }
 
     @Transactional

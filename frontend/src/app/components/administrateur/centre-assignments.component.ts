@@ -216,18 +216,33 @@ export class CentreAssignmentsComponent implements OnInit {
     this.api.getSallesWithCandidates(this.selectedCentreId).subscribe({
       next: (res) => {
         const payload = res.data || {};
-        const candidates = Array.isArray(payload.candidats) ? payload.candidats : [];
         const salles = Array.isArray(payload.salles) ? payload.salles : [];
+        const unassigned = Array.isArray(payload.unassignedCandidatures) ? payload.unassignedCandidatures : [];
 
-        this.assignments = candidates.map((candidate: any) => {
-          const assignedSalle = candidate.salle || null;
-          return {
-            candidature: candidate.candidature || candidate,
-            salleLabel: assignedSalle ? `Salle actuelle : ${assignedSalle.nom || assignedSalle.libelle || assignedSalle}` : 'Aucune salle assignée',
-            salleOptions: salles.map((salle: any) => ({ id: salle.id, label: salle.nom || salle.libelle || `Salle ${salle.id}` })),
-            selectedSalleId: assignedSalle?.id
-          } as AssignmentView;
+        const salleOptions = salles.map((salle: any) => ({ id: salle.salle?.id, label: salle.salle?.nom || salle.salle?.libelle || `Salle ${salle.salle?.id}` }));
+
+        const assignedFromSalles: AssignmentView[] = [];
+        salles.forEach((salleEntry: any) => {
+          const salle = salleEntry.salle || {};
+          const candidatureList = Array.isArray(salleEntry.candidatures) ? salleEntry.candidatures : [];
+          candidatureList.forEach((candidature: any) => {
+            assignedFromSalles.push({
+              candidature,
+              salleLabel: `Salle actuelle : ${salle.nom || salle.libelle || `Salle ${salle.id}`}`,
+              salleOptions,
+              selectedSalleId: salle.id
+            });
+          });
         });
+
+        const unassignedAssignments = unassigned.map((candidature: any) => ({
+          candidature,
+          salleLabel: 'Aucune salle assignée',
+          salleOptions,
+          selectedSalleId: undefined
+        } as AssignmentView));
+
+        this.assignments = [...assignedFromSalles, ...unassignedAssignments];
         this.loading = false;
       },
       error: () => {

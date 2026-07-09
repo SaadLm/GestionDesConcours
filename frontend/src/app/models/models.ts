@@ -31,6 +31,25 @@ export interface Concours {
   centres?: Centre[];
 }
 
+export interface ConcoursOption {
+  optionId: string;
+  concoursId: number;
+  concoursTitre: string;
+  concoursDescription?: string;
+  dateConcours?: string;
+  dateDebutInscription?: string;
+  dateFinInscription?: string;
+  statut?: string;
+  centreId: number;
+  centreNom: string;
+  centreVille: string;
+  centreAdresse?: string;
+  specialiteId: number;
+  specialiteNom: string;
+  specialiteDescription?: string;
+  nombrePlaces?: number;
+}
+
 export interface CentreSpecialiteAllocation {
   id?: number;
   centreId?: number;

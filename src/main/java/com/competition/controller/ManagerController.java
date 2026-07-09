@@ -22,13 +22,10 @@ public class ManagerController {
     @GetMapping("/candidatures")
     @PreAuthorize("hasAnyRole('GESTIONNAIRE_LOCAL', 'GESTIONNAIRE_GLOBAL', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<Candidature>>> getCandidatures(
-            @RequestParam(required = false) Long centreId,
-            @RequestParam(required = false) Long concoursId) {
+            @RequestParam(required = false) Long centreId) {
 
         List<Candidature> list;
-        if (concoursId != null) {
-            list = candidatureRepository.findByConcoursIdWithCandidateDiplomes(concoursId);
-        } else if (centreId != null) {
+        if (centreId != null) {
             list = candidatureRepository.findByCentreId(centreId);
         } else {
             list = candidatureRepository.findAll();
@@ -54,12 +51,7 @@ public class ManagerController {
     @PostMapping("/candidatures/{id}/rejeter")
     @PreAuthorize("hasAnyRole('GESTIONNAIRE_LOCAL', 'GESTIONNAIRE_GLOBAL', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> rejeter(@PathVariable Long id, @RequestParam String commentaire) {
-        Candidature candidature = candidatureRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Candidature non trouvée."));
-
-        candidature.setStatut(com.competition.model.StatutCandidature.REJETEE);
-        candidature.setCommentaire(commentaire);
-        candidatureRepository.save(candidature);
+        candidatureService.rejeterCandidature(id, commentaire);
 
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .success(true)

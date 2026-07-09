@@ -1,13 +1,16 @@
 package com.competition.controller;
 
 import com.competition.dto.ApiResponse;
+import com.competition.dto.ConcoursOptionResponse;
 import com.competition.model.Candidature;
 import com.competition.model.Centre;
 import com.competition.model.Concours;
+import com.competition.model.CentreSpecialite;
 import com.competition.model.Specialite;
 import com.competition.repository.CandidatureRepository;
 import com.competition.repository.CentreRepository;
 import com.competition.repository.ConcoursRepository;
+import com.competition.repository.CentreSpecialiteRepository;
 import com.competition.repository.SpecialiteRepository;
 import com.competition.service.CandidatureService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/public")
@@ -25,6 +29,7 @@ public class PublicController {
         private final CandidatureRepository candidatureRepository;
         private final CentreRepository centreRepository;
         private final ConcoursRepository concoursRepository;
+        private final CentreSpecialiteRepository centreSpecialiteRepository;
         private final SpecialiteRepository specialiteRepository;
 
         @PostMapping("/postuler")
@@ -70,6 +75,46 @@ public class PublicController {
                                 .message("Liste des concours récupérée avec succès.")
                                 .data(concours)
                                 .build());
+        }
+
+        @GetMapping("/concours-options")
+        public ResponseEntity<ApiResponse<List<ConcoursOptionResponse>>> getConcoursOptions() {
+                List<Concours> openConcours = concoursRepository.findAll().stream()
+                        .filter(c -> c.getStatut() != null && ("OUVERT".equalsIgnoreCase(c.getStatut()) || "Ouvert".equalsIgnoreCase(c.getStatut()) || "OPEN".equalsIgnoreCase(c.getStatut())))
+                        .collect(Collectors.toList());
+                List<CentreSpecialite> allocations = centreSpecialiteRepository.findAll();
+
+                List<ConcoursOptionResponse> options = new java.util.ArrayList<>();
+                for (Concours concours : openConcours) {
+                        for (CentreSpecialite allocation : allocations) {
+                                Centre centre = allocation.getCentre();
+                                Specialite specialite = allocation.getSpecialite();
+                                options.add(ConcoursOptionResponse.builder()
+                                        .optionId(concours.getId() + "-" + centre.getId() + "-" + specialite.getId())
+                                        .concoursId(concours.getId())
+                                        .concoursTitre(concours.getTitre())
+                                        .concoursDescription(concours.getDescription())
+                                        .dateConcours(concours.getDateConcours() != null ? concours.getDateConcours().toString() : null)
+                                        .dateDebutInscription(concours.getDateDebutInscription() != null ? concours.getDateDebutInscription().toString() : null)
+                                        .dateFinInscription(concours.getDateFinInscription() != null ? concours.getDateFinInscription().toString() : null)
+                                        .statut(concours.getStatut())
+                                        .centreId(centre.getId())
+                                        .centreNom(centre.getNom())
+                                        .centreVille(centre.getVille())
+                                        .centreAdresse(centre.getAdresse())
+                                        .specialiteId(specialite.getId())
+                                        .specialiteNom(specialite.getNom())
+                                        .specialiteDescription(specialite.getDescription())
+                                        .nombrePlaces(allocation.getNombrePlaces())
+                                        .build());
+                        }
+                }
+
+                return ResponseEntity.ok(ApiResponse.<List<ConcoursOptionResponse>>builder()
+                        .success(true)
+                        .message("Liste des options de concours ouverte récupérée avec succès.")
+                        .data(options)
+                        .build());
         }
 
         @GetMapping("/specialites")
