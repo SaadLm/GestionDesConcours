@@ -29,6 +29,7 @@ export interface Concours {
   statut: string;
   specialites?: Specialite[];
   centres?: Centre[];
+  centre?: Centre;
 }
 
 export interface ConcoursOption {

@@ -33,4 +33,8 @@ public class Concours {
 
     @Column(nullable = false)
     private String statut; // e.g., OUVERT, FERME, TERMINE
+
+    @ManyToOne
+    @JoinColumn(name = "centre_id")
+    private Centre centre;
 }

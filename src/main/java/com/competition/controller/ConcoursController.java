@@ -2,6 +2,7 @@ package com.competition.controller;
 
 import com.competition.dto.ApiResponse;
 import com.competition.model.Concours;
+import com.competition.repository.CentreRepository;
 import com.competition.repository.ConcoursRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import java.util.List;
 public class ConcoursController {
 
     private final ConcoursRepository concoursRepository;
+    private final CentreRepository centreRepository;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<Concours>>> getAllConcours() {
@@ -42,6 +44,10 @@ public class ConcoursController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_GLOBAL')")
     public ResponseEntity<ApiResponse<Concours>> createConcours(@RequestBody Concours concours) {
+        if (concours.getCentre() != null && concours.getCentre().getId() != null) {
+            centreRepository.findById(concours.getCentre().getId())
+                .ifPresent(concours::setCentre);
+        }
         Concours saved = concoursRepository.save(concours);
         return ResponseEntity.ok(ApiResponse.<Concours>builder()
                 .success(true)
@@ -63,6 +69,12 @@ public class ConcoursController {
         concours.setDateDebutInscription(concoursDetails.getDateDebutInscription());
         concours.setDateFinInscription(concoursDetails.getDateFinInscription());
         concours.setStatut(concoursDetails.getStatut());
+        if (concoursDetails.getCentre() != null && concoursDetails.getCentre().getId() != null) {
+            centreRepository.findById(concoursDetails.getCentre().getId())
+                .ifPresent(concours::setCentre);
+        } else {
+            concours.setCentre(null);
+        }
         
         Concours updated = concoursRepository.save(concours);
         return ResponseEntity.ok(ApiResponse.<Concours>builder()

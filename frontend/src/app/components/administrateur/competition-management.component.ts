@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
-import { Concours, Candidature } from '../../models/models';
+import { Centre, Concours, Candidature } from '../../models/models';
 
 @Component({
   selector: 'app-competition-management',
@@ -104,9 +104,116 @@ import { Concours, Candidature } from '../../models/models';
         </div>
       </section>
 
-      <!-- Create/Edit Concours Form -->
-      <section class="create-concours-section" *ngIf="canManage">
-        <h3>{{ editingConcours ? 'Modifier Concours' : 'Créer un Concours' }}</h3>
+      <div class="modal-backdrop" *ngIf="editingConcours" (click)="cancelEdit()"></div>
+      <section class="edit-modal" *ngIf="editingConcours" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Modifier le concours</h3>
+          <button class="close-btn" type="button" (click)="cancelEdit()">✕</button>
+        </div>
+        <form (ngSubmit)="saveConcours()" class="concours-form modal-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Titre du Concours *</label>
+              <input 
+                type="text" 
+                [(ngModel)]="formConcours.titre"
+                name="titre"
+                placeholder="Ex: Concours d'Entrée 2024"
+                class="form-control"
+                [class.error]="errors['titre']">
+              <span class="error-message" *ngIf="errors['titre']">{{ errors['titre'] }}</span>
+            </div>
+
+            <div class="form-group">
+              <label>Centre associé</label>
+              <select [(ngModel)]="formConcours.centre" name="centre" class="form-control">
+                <option [ngValue]="undefined">-- Aucun centre --</option>
+                <option *ngFor="let centre of centres" [ngValue]="centre">
+                  {{ centre.nom }} — {{ centre.ville }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Statut</label>
+              <select [(ngModel)]="formConcours.statut" name="statut" class="form-control">
+                <option value="OUVERT">Ouvert</option>
+                <option value="FERME">Fermé</option>
+                <option value="TERMINE">Terminé</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            <textarea 
+              [(ngModel)]="formConcours.description"
+              name="description"
+              placeholder="Description du concours..."
+              class="form-control-textarea"
+              rows="3"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date du Concours *</label>
+              <input 
+                type="date" 
+                [(ngModel)]="formConcours.dateConcours"
+                name="dateConcours"
+                class="form-control"
+                [class.error]="errors['dateConcours']">
+              <span class="error-message" *ngIf="errors['dateConcours']">{{ errors['dateConcours'] }}</span>
+            </div>
+
+            <div class="form-group">
+              <label>Début Inscriptions *</label>
+              <input 
+                type="date" 
+                [(ngModel)]="formConcours.dateDebutInscription"
+                name="dateDebutInscription"
+                class="form-control"
+                [class.error]="errors['dateDebutInscription']">
+              <span class="error-message" *ngIf="errors['dateDebutInscription']">{{ errors['dateDebutInscription'] }}</span>
+            </div>
+
+            <div class="form-group">
+              <label>Fin Inscriptions *</label>
+              <input 
+                type="date" 
+                [(ngModel)]="formConcours.dateFinInscription"
+                name="dateFinInscription"
+                class="form-control"
+                [class.error]="errors['dateFinInscription']">
+              <span class="error-message" *ngIf="errors['dateFinInscription']">{{ errors['dateFinInscription'] }}</span>
+            </div>
+          </div>
+
+          <div class="form-actions modal-actions">
+            <button 
+              type="submit" 
+              class="btn btn-primary"
+              [disabled]="savingConcours">
+              <span *ngIf="!savingConcours">✏️ Mettre à Jour</span>
+              <span *ngIf="savingConcours">Sauvegarde en cours...</span>
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-secondary"
+              (click)="cancelEdit()">
+              Annuler
+            </button>
+          </div>
+
+          <div *ngIf="message" [ngClass]="messageType" class="alert-message">
+            {{ message }}
+          </div>
+        </form>
+      </section>
+
+      <!-- Create Concours Form -->
+      <section class="create-concours-section" *ngIf="canManage && !editingConcours">
+        <h3>Créer un Concours</h3>
         <form (ngSubmit)="saveConcours()" class="concours-form">
           <div class="form-row">
             <div class="form-group">
@@ -119,6 +226,16 @@ import { Concours, Candidature } from '../../models/models';
                 class="form-control"
                 [class.error]="errors['titre']">
               <span class="error-message" *ngIf="errors['titre']">{{ errors['titre'] }}</span>
+            </div>
+
+            <div class="form-group">
+              <label>Centre associé</label>
+              <select [(ngModel)]="formConcours.centre" name="centre" class="form-control">
+                <option [ngValue]="undefined">-- Aucun centre --</option>
+                <option *ngFor="let centre of centres" [ngValue]="centre">
+                  {{ centre.nom }} — {{ centre.ville }}
+                </option>
+              </select>
             </div>
 
             <div class="form-group">
@@ -181,15 +298,8 @@ import { Concours, Candidature } from '../../models/models';
               type="submit" 
               class="btn btn-primary"
               [disabled]="savingConcours">
-              <span *ngIf="!savingConcours">{{ editingConcours ? '✏️ Mettre à Jour' : '➕ Créer Concours' }}</span>
+              <span *ngIf="!savingConcours">➕ Créer Concours</span>
               <span *ngIf="savingConcours">Sauvegarde en cours...</span>
-            </button>
-            <button 
-              type="button" 
-              class="btn btn-secondary"
-              (click)="cancelEdit()"
-              *ngIf="editingConcours">
-              Annuler
             </button>
           </div>
 
@@ -424,13 +534,15 @@ import { Concours, Candidature } from '../../models/models';
       text-align: center;
       color: var(--text-muted);
     }
-    .overlay-backdrop {
+    .overlay-backdrop,
+    .modal-backdrop {
       position: fixed;
       inset: 0;
       background: rgba(15, 23, 42, 0.55);
       z-index: 20;
     }
-    .candidates-overlay {
+    .candidates-overlay,
+    .edit-modal {
       position: fixed;
       top: 50%;
       left: 50%;
@@ -443,6 +555,43 @@ import { Concours, Candidature } from '../../models/models';
       background: var(--surface);
       box-shadow: 0 24px 80px rgba(15, 23, 42, 0.25);
       z-index: 30;
+    }
+    .edit-modal {
+      width: min(95vw, 760px);
+      max-height: 92vh;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.4rem;
+    }
+    .modal-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .modal-actions {
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+    .form-actions.modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+    .close-btn {
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
     }
     .overlay-header {
       display: flex;
@@ -511,6 +660,7 @@ import { Concours, Candidature } from '../../models/models';
 })
 export class CompetitionManagementComponent implements OnInit {
   concours: Concours[] = [];
+  centres: Centre[] = [];
   editingConcours: Concours | null = null;
   formConcours: Concours = this.emptyForm();
   canManage = false;
@@ -530,6 +680,7 @@ export class CompetitionManagementComponent implements OnInit {
   ngOnInit(): void {
     this.canManage = this.auth.isAdmin() || this.auth.isGlobalManager();
     this.loadConcours();
+    this.loadCentres();
   }
 
   getConcoursTitle(comp: Concours): string {
@@ -543,7 +694,8 @@ export class CompetitionManagementComponent implements OnInit {
       dateConcours: '',
       dateDebutInscription: '',
       dateFinInscription: '',
-      statut: 'OUVERT'
+      statut: 'OUVERT',
+      centre: undefined
     };
   }
 
@@ -564,7 +716,10 @@ export class CompetitionManagementComponent implements OnInit {
 
   editConcours(comp: Concours): void {
     this.editingConcours = comp;
-    this.formConcours = { ...comp };
+    this.formConcours = {
+      ...comp,
+      centre: comp.centre ? { ...comp.centre } : undefined
+    };
   }
 
   toggleCandidates(comp: Concours): void {
@@ -644,6 +799,17 @@ export class CompetitionManagementComponent implements OnInit {
     }
 
     return Object.keys(this.errors).length === 0;
+  }
+
+  loadCentres(): void {
+    this.api.getCentres().subscribe({
+      next: (res) => {
+        this.centres = res.data || [];
+      },
+      error: () => {
+        // centre list failed to load; form can still function without it
+      }
+    });
   }
 
   saveConcours(): void {
