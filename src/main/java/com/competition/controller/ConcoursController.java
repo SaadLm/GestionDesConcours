@@ -4,6 +4,7 @@ import com.competition.dto.ApiResponse;
 import com.competition.model.Concours;
 import com.competition.repository.CentreRepository;
 import com.competition.repository.ConcoursRepository;
+import com.competition.repository.SpecialiteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +20,7 @@ public class ConcoursController {
 
     private final ConcoursRepository concoursRepository;
     private final CentreRepository centreRepository;
+    private final SpecialiteRepository specialiteRepository;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<Concours>>> getAllConcours() {
@@ -48,6 +50,10 @@ public class ConcoursController {
             centreRepository.findById(concours.getCentre().getId())
                 .ifPresent(concours::setCentre);
         }
+        if (concours.getSpecialite() != null && concours.getSpecialite().getId() != null) {
+            specialiteRepository.findById(concours.getSpecialite().getId())
+                .ifPresent(concours::setSpecialite);
+        }
         Concours saved = concoursRepository.save(concours);
         return ResponseEntity.ok(ApiResponse.<Concours>builder()
                 .success(true)
@@ -74,6 +80,12 @@ public class ConcoursController {
                 .ifPresent(concours::setCentre);
         } else {
             concours.setCentre(null);
+        }
+        if (concoursDetails.getSpecialite() != null && concoursDetails.getSpecialite().getId() != null) {
+            specialiteRepository.findById(concoursDetails.getSpecialite().getId())
+                .ifPresent(concours::setSpecialite);
+        } else {
+            concours.setSpecialite(null);
         }
         
         Concours updated = concoursRepository.save(concours);

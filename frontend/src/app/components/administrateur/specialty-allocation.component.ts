@@ -11,6 +11,13 @@ interface AllocationRow extends CentreSpecialiteAllocation {
   specialiteName: string;
 }
 
+interface SalleInfo {
+  centreId: number;
+  nom: string;
+  capacite: number;
+  reserved: number;
+}
+
 @Component({
   selector: 'app-specialty-allocation',
   standalone: true,
@@ -18,9 +25,9 @@ interface AllocationRow extends CentreSpecialiteAllocation {
   template: `
     <div class="allocation-section">
       <div class="section-header">
-        <h2>Attribution des Spécialités aux Centres</h2>
-        <p *ngIf="canManage">Gérez l'allocation des spécialités aux différents centres d'examen.</p>
-        <p *ngIf="!canManage">Consultez les allocations de spécialités par centre d'examen.</p>
+        <!-- <h2>Attribution des Spécialités aux Centres</h2> -->
+        <h2 *ngIf="canManage">Gérez l'allocation des spécialités aux différents centres d'examen.</h2>
+        <h2 *ngIf="!canManage">Consultez les allocations de spécialités par centre d'examen.</h2>
       </div>
 
       <!-- Filter Bar -->
@@ -68,7 +75,7 @@ interface AllocationRow extends CentreSpecialiteAllocation {
             <tr *ngFor="let alloc of filteredAllocations">
               <td class="specialty-name">{{ alloc.specialiteName }}</td>
               <td>{{ alloc.centreName }}</td>
-              <td class="number">{{ alloc.nombrePlaces }}</td>
+              <td class="number">{{ alloc.nombrePlaces }} / <span class="reserved">{{ getReservedPlacesByCenter(alloc.centreId!) }}</span></td>
               <td class="actions" *ngIf="canManage">
                 <button class="btn btn-primary btn-xs" (click)="editAllocation(alloc)">✏️</button>
                 <button class="btn btn-danger btn-xs" (click)="deleteAllocation(alloc.id!)">🗑️</button>
@@ -162,6 +169,10 @@ interface AllocationRow extends CentreSpecialiteAllocation {
               <div class="stat">
                 <span class="label">Places Totales</span>
                 <span class="value">{{ getTotalSpots(centre.id!) }}</span>
+              </div>
+              <div class="stat">
+                <span class="label">Places Réservées</span>
+                <span class="value reserved">{{ getReservedPlacesByCenter(centre.id!) }}</span>
               </div>
             </div>
           </div>
@@ -402,6 +413,17 @@ interface AllocationRow extends CentreSpecialiteAllocation {
       font-weight: 700;
       color: var(--primary);
     }
+    .stat .value.reserved {
+      color: #dc2626;
+      font-size: 1.3rem;
+    }
+    table .number {
+      font-weight: 500;
+    }
+    table .number .reserved {
+      color: #dc2626;
+      font-weight: 700;
+    }
     .loading-state {
       display: flex;
       flex-direction: column;
@@ -446,6 +468,7 @@ export class SpecialtyAllocationComponent implements OnInit {
   allocations: AllocationRow[] = [];
   centres: Centre[] = [];
   specialites: Specialite[] = [];
+  sallesData: Map<number, SalleInfo[]> = new Map(); // centreId -> SalleInfo[]
   canManage = false;
   
   editingAllocation: AllocationRow | null = null;
@@ -469,6 +492,7 @@ export class SpecialtyAllocationComponent implements OnInit {
     this.canManage = this.auth.canManagePlatform();
     this.loadCentres();
     this.loadSpecialites();
+    this.loadSallesData();
   }
 
   loadCentres(): void {
@@ -488,6 +512,42 @@ export class SpecialtyAllocationComponent implements OnInit {
     this.api.getAdminSpecialites().subscribe({
       next: (res) => {
         this.specialites = res.data || [];
+      },
+      error: () => {
+        // non-blocking
+      }
+    });
+  }
+
+  loadSallesData(): void {
+    this.api.getAdminCentres().subscribe({
+      next: (res) => {
+        const centres = res.data || [];
+        centres.forEach(centre => {
+          if (centre.id) {
+            this.api.getSallesWithCandidates(centre.id).subscribe({
+              next: (sallesRes: any) => {
+                const sallesList: SalleInfo[] = [];
+                if (sallesRes.data?.salles) {
+                  sallesRes.data.salles.forEach((salleItem: any) => {
+                    if (salleItem.salle) {
+                      sallesList.push({
+                        centreId: centre.id!,
+                        nom: salleItem.salle.nom,
+                        capacite: salleItem.salle.capacite || 0,
+                        reserved: (salleItem.candidatures || []).length
+                      });
+                    }
+                  });
+                }
+                this.sallesData.set(centre.id!, sallesList);
+              },
+              error: () => {
+                // non-blocking
+              }
+            });
+          }
+        });
       },
       error: () => {
         // non-blocking
@@ -638,5 +698,10 @@ export class SpecialtyAllocationComponent implements OnInit {
     return this.allocations
       .filter(a => a.centreId === centreId)
       .reduce((sum, a) => sum + (a.nombrePlaces || 0), 0);
+  }
+
+  getReservedPlacesByCenter(centreId: number): number {
+    const salles = this.sallesData.get(centreId) || [];
+    return salles.reduce((sum, salle) => sum + salle.reserved, 0);
   }
 }

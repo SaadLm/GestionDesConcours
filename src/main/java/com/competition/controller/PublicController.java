@@ -16,6 +16,7 @@ import com.competition.service.CandidatureService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,6 +36,21 @@ public class PublicController {
         @PostMapping("/postuler")
         public ResponseEntity<ApiResponse<Candidature>> postuler(@RequestBody Candidature candidature) {
                 Candidature saved = candidatureService.soumettreCandidature(candidature);
+                return ResponseEntity.ok(ApiResponse.<Candidature>builder()
+                                .success(true)
+                                .message("Votre candidature a été soumise avec succès. Votre numéro est : "
+                                                + saved.getNumeroCandidature())
+                                .data(saved)
+                                .build());
+        }
+
+        @PostMapping(value = "/postuler-avec-documents", consumes = "multipart/form-data")
+        public ResponseEntity<ApiResponse<Candidature>> postulerAvecDocuments(
+                        @RequestPart("candidature") Candidature candidature,
+                        @RequestPart("cin") MultipartFile cin,
+                        @RequestPart("cv") MultipartFile cv,
+                        @RequestPart("diplome") MultipartFile diplome) {
+                Candidature saved = candidatureService.soumettreCandidatureAvecDocuments(candidature, cin, cv, diplome);
                 return ResponseEntity.ok(ApiResponse.<Candidature>builder()
                                 .success(true)
                                 .message("Votre candidature a été soumise avec succès. Votre numéro est : "
@@ -86,27 +102,35 @@ public class PublicController {
 
                 List<ConcoursOptionResponse> options = new java.util.ArrayList<>();
                 for (Concours concours : openConcours) {
-                        for (CentreSpecialite allocation : allocations) {
-                                Centre centre = allocation.getCentre();
-                                Specialite specialite = allocation.getSpecialite();
+                        if (concours.getCentre() != null && concours.getSpecialite() != null) {
+                                Centre centre = concours.getCentre();
+                                Specialite specialite = concours.getSpecialite();
+                                Integer nombrePlaces = allocations.stream()
+                                        .filter(cs -> cs.getCentre() != null && cs.getSpecialite() != null
+                                                && cs.getCentre().getId().equals(centre.getId())
+                                                && cs.getSpecialite().getId().equals(specialite.getId()))
+                                        .map(CentreSpecialite::getNombrePlaces)
+                                        .findFirst()
+                                        .orElse(null);
+
                                 options.add(ConcoursOptionResponse.builder()
-                                        .optionId(concours.getId() + "-" + centre.getId() + "-" + specialite.getId())
-                                        .concoursId(concours.getId())
-                                        .concoursTitre(concours.getTitre())
-                                        .concoursDescription(concours.getDescription())
-                                        .dateConcours(concours.getDateConcours() != null ? concours.getDateConcours().toString() : null)
-                                        .dateDebutInscription(concours.getDateDebutInscription() != null ? concours.getDateDebutInscription().toString() : null)
-                                        .dateFinInscription(concours.getDateFinInscription() != null ? concours.getDateFinInscription().toString() : null)
-                                        .statut(concours.getStatut())
-                                        .centreId(centre.getId())
-                                        .centreNom(centre.getNom())
-                                        .centreVille(centre.getVille())
-                                        .centreAdresse(centre.getAdresse())
-                                        .specialiteId(specialite.getId())
-                                        .specialiteNom(specialite.getNom())
-                                        .specialiteDescription(specialite.getDescription())
-                                        .nombrePlaces(allocation.getNombrePlaces())
-                                        .build());
+                                                .optionId(concours.getId() + "-" + centre.getId() + "-" + specialite.getId())
+                                                .concoursId(concours.getId())
+                                                .concoursTitre(concours.getTitre())
+                                                .concoursDescription(concours.getDescription())
+                                                .dateConcours(concours.getDateConcours() != null ? concours.getDateConcours().toString() : null)
+                                                .dateDebutInscription(concours.getDateDebutInscription() != null ? concours.getDateDebutInscription().toString() : null)
+                                                .dateFinInscription(concours.getDateFinInscription() != null ? concours.getDateFinInscription().toString() : null)
+                                                .statut(concours.getStatut())
+                                                .centreId(centre.getId())
+                                                .centreNom(centre.getNom())
+                                                .centreVille(centre.getVille())
+                                                .centreAdresse(centre.getAdresse())
+                                                .specialiteId(specialite.getId())
+                                                .specialiteNom(specialite.getNom())
+                                                .specialiteDescription(specialite.getDescription())
+                                                .nombrePlaces(nombrePlaces)
+                                                .build());
                         }
                 }
 

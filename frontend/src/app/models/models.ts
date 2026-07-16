@@ -30,6 +30,7 @@ export interface Concours {
   specialites?: Specialite[];
   centres?: Centre[];
   centre?: Centre;
+  specialite?: Specialite;
 }
 
 export interface ConcoursOption {
@@ -78,10 +79,11 @@ export interface Diplome {
   anneeObtention: number;
 }
 
-export interface DocumentReference {
-  cin: string;
-  cv: string;
-  diplome: string;
+export interface UploadedDocument {
+  id: number;
+  nomFichier: string;
+  typeDocument: 'CIN' | 'CV' | 'DIPLOME' | 'ATTESTATION' | 'AUTRE';
+  dateUpload?: string;
 }
 
 export interface Candidat {
@@ -106,11 +108,7 @@ export interface Candidature {
   centre: Partial<Centre>;
   diplome: Diplome;
   experienceProfessionnelle: string;
-  documents: DocumentReference;
-  notifications: {
-    email: boolean;
-    sms: boolean;
-  };
+  documents?: UploadedDocument[];
   dateSoumission?: string;
   statut?: string;
   commentaire?: string;

@@ -16,6 +16,15 @@ export class ApiService {
     return this.http.post<ApiResponse<Candidature>>(`${this.baseUrl}/public/postuler`, candidature);
   }
 
+  postulerAvecDocuments(candidature: Candidature, files: { cin: File; cv: File; diplome: File }): Observable<ApiResponse<Candidature>> {
+    const formData = new FormData();
+    formData.append('candidature', new Blob([JSON.stringify(candidature)], { type: 'application/json' }));
+    formData.append('cin', files.cin);
+    formData.append('cv', files.cv);
+    formData.append('diplome', files.diplome);
+    return this.http.post<ApiResponse<Candidature>>(`${this.baseUrl}/public/postuler-avec-documents`, formData);
+  }
+
   login(email: string, password: string): Observable<{ token: string }> {
     return this.http.post<{ token: string }>(`${this.baseUrl}/auth/login`, { email, password });
   }
@@ -50,6 +59,12 @@ export class ApiService {
       params = params.set('concoursId', String(concoursId));
     }
     return this.http.get<ApiResponse<Candidature[]>>(`${this.baseUrl}/manager/candidatures`, { params });
+  }
+
+  getCandidateDocument(candidatureId: number, documentId: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/manager/candidatures/${candidatureId}/documents/${documentId}`, {
+      responseType: 'blob'
+    });
   }
 
   validerCandidature(id: number): Observable<ApiResponse<void>> {
@@ -151,8 +166,8 @@ export class ApiService {
 
   createCentreSpecialite(payload: { centreId: number; specialiteId: number; nombrePlaces: number }): Observable<ApiResponse<CentreSpecialiteAllocation>> {
     return this.http.post<ApiResponse<CentreSpecialiteAllocation>>(`${this.baseUrl}/admin/centre-specialites`, {
-      centre: { id: payload.centreId },
-      specialite: { id: payload.specialiteId },
+      centreId: payload.centreId,
+      specialiteId: payload.specialiteId,
       nombrePlaces: payload.nombrePlaces
     });
   }

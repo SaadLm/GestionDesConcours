@@ -17,7 +17,7 @@ import { Router } from '@angular/router';
         <p class="section-subtitle">Inscrivez-vous en ligne sans création de compte et suivez l'état de votre dossier avec un numéro unique.</p>
 
         <form [formGroup]="form" (ngSubmit)="submit()">
-          <div class="step-indicator">Étape {{ step }} sur 5</div>
+          <div class="step-indicator">Étape {{ step }} sur 4</div>
 
           <!-- Step 1: Choix du concours -->
           <div *ngIf="step === 1">
@@ -42,35 +42,7 @@ import { Router } from '@angular/router';
               </select>
             </div>
             
-            <div class="select-list">
-              <div class="info-block" *ngIf="selectedOption">
-                <p><strong>Option sélectionnée :</strong> {{ selectedOptionInfo }}</p>
-              </div>
-              <div *ngIf="loadingData" class="loading-state">Chargement des concours ouverts...</div>
-              <div *ngIf="!loadingData && filteredOptions.length === 0" class="empty-state">
-                <p>Aucune option de concours disponible. Vérifiez vos filtres ou revenez plus tard.</p>
-              </div>
-              <div *ngIf="!loadingData && filteredOptions.length > 0" class="options-grid">
-                <article class="option-card" *ngFor="let option of filteredOptions" (click)="selectOption(option)" [class.selected]="selectedOption?.optionId === option.optionId">
-                  <div class="option-header">
-                    <div>
-                      <h4>{{ option.concoursTitre }}</h4>
-                    </div>
-                    <span class="status-badge">{{ option.statut }}</span>
-                    <span class="status-badge">{{ option.centreVille }}</span>
-                  </div>
-                  <p class="meta"> spécialité : {{ option.specialiteNom }} · <br>centre : {{ option.centreNom }} · 
-                  <!-- <br>ville : {{ option.centreVille }} -->
-                </p>
-                  <p class="description">{{ option.concoursDescription || 'Description du concours non fournie.' }}</p>
-                  <div class="option-footer">
-                    <span>Inscriptions : {{ option.dateDebutInscription || 'N/A' }} → {{ option.dateFinInscription || 'N/A' }}</span>
-                    <span>Places : {{ option.nombrePlaces ?? 'N/A' }}</span>
-                  </div>
-                  <!-- <button type="button" class="btn btn-outline">Sélectionner</button> -->
-                </article>
-              </div>
-            </div>
+          
 
           </div>
 
@@ -172,31 +144,24 @@ import { Router } from '@angular/router';
               <label>Expérience professionnelle </label>
               <textarea formControlName="experienceProfessionnelle" rows="4"></textarea>
             </div>
-          </div>
-
-          <!-- Step 5: Documents et confirmation -->
-          <div *ngIf="step === 5">
-            <h3 class="step-title">5. Documents et validation</h3>
-            <div class="input-group">
-              <label>Copie de la CIN *</label>
-              <input type="text" formControlName="documentCin" placeholder="Nom de fichier ou description du document">
-            </div>
-            <div class="input-group">
-              <label>Curriculum Vitae (CV) *</label>
-              <input type="text" formControlName="documentCv" placeholder="Nom de fichier ou description du document">
-            </div>
-            <div class="input-group">
-              <label>Diplômes et attestations *</label>
-              <input type="text" formControlName="documentDiplome" placeholder="Nom de fichier ou description du document">
-            </div>
-            <div class="grid-2">
-              <div class="input-group checkbox-group">
-                <label>
-                  <input type="checkbox" formControlName="notificationEmail"> Notifications par email
-                </label>
+            <div class="documents-grid">
+              <div class="input-group">
+                <label>Copie de la CIN (PDF, 5 Mo max) *</label>
+                <input type="file" accept="application/pdf,.pdf" (change)="onDocumentSelected($event, 'cin')">
+                <small *ngIf="documentFiles.cin">{{ documentFiles.cin.name }}</small>
+              </div>
+              <div class="input-group">
+                <label>Curriculum Vitae (PDF, 5 Mo max) *</label>
+                <input type="file" accept="application/pdf,.pdf" (change)="onDocumentSelected($event, 'cv')">
+                <small *ngIf="documentFiles.cv">{{ documentFiles.cv.name }}</small>
+              </div>
+              <div class="input-group">
+                <label>Diplômes et attestations (PDF, 5 Mo max) *</label>
+                <input type="file" accept="application/pdf,.pdf" (change)="onDocumentSelected($event, 'diplome')">
+                <small *ngIf="documentFiles.diplome">{{ documentFiles.diplome.name }}</small>
               </div>
             </div>
-            <div class="input-group checkbox-group">
+            <div class="input-group checkbox-group terms-group">
               <label>
                 <input type="checkbox" formControlName="acceptTerms"> J'accepte les conditions d'utilisation et la politique de confidentialité
               </label>
@@ -205,13 +170,43 @@ import { Router } from '@angular/router';
 
           <div class="form-nav">
             <button type="button" class="btn btn-secondary" *ngIf="step > 1" (click)="prev()">Précédent</button>
-            <button type="button" class="btn btn-primary" *ngIf="step < 5" (click)="nextStep()" [disabled]="step === 1 && !selectedOption">Suivant</button>
-            <button type="submit" class="btn btn-primary" *ngIf="step === 5" [disabled]="loading">
+            <button type="button" class="btn btn-primary" *ngIf="step < 4" (click)="nextStep()" [disabled]="step === 1 && !selectedOption">Suivant</button>
+            <button type="submit" class="btn btn-primary" *ngIf="step === 4" [disabled]="loading">
               {{ loading ? 'Envoi en cours...' : 'Soumettre ma candidature' }}
             </button>
           </div>
         </form>
-
+        <div *ngIf="step === 1">
+          <div class="select-list">
+              <div class="info-block" *ngIf="selectedOption">
+                <p><strong>Option sélectionnée :</strong> {{ selectedOptionInfo }}</p>
+              </div>
+              <div *ngIf="loadingData" class="loading-state">Chargement des concours ouverts...</div>
+              <div *ngIf="!loadingData && filteredOptions.length === 0" class="empty-state">
+                <p>Aucune option de concours disponible. Vérifiez vos filtres ou revenez plus tard.</p>
+              </div>
+              <div *ngIf="!loadingData && filteredOptions.length > 0" class="options-grid">
+                <article class="option-card" *ngFor="let option of filteredOptions" (click)="selectOption(option)" [class.selected]="selectedOption?.optionId === option.optionId">
+                  <div class="option-header">
+                    <div>
+                      <h4>{{ option.concoursTitre }}</h4>
+                    </div>
+                    <span class="status-badge">{{ option.statut }}</span>
+                    <span class="status-badge">{{ option.centreVille }}</span>
+                  </div>
+                  <p class="meta"> spécialité : {{ option.specialiteNom }} · <br>centre : {{ option.centreNom }} · 
+                  <!-- <br>ville : {{ option.centreVille }} -->
+                </p>
+                  <p class="description">{{ option.concoursDescription || 'Description du concours non fournie.' }}</p>
+                  <div class="option-footer">
+                    <span>Inscriptions : {{ option.dateDebutInscription || 'N/A' }} → {{ option.dateFinInscription || 'N/A' }}</span>
+                    <span>Places : {{ option.nombrePlaces ?? 'N/A' }}</span>
+                  </div>
+                  <!-- <button type="button" class="btn btn-outline">Sélectionner</button> -->
+                </article>
+              </div>
+            </div>
+</div>
         <div *ngIf="errorMessage" class="alert alert-error fade-in">
           {{ errorMessage }}
         </div>
@@ -246,6 +241,14 @@ import { Router } from '@angular/router';
       grid-template-columns: 1fr 1fr;
       gap: 1.5rem;
     }
+    .documents-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .documents-grid small { color: var(--text-muted); overflow-wrap: anywhere; }
+    .terms-group { margin-top: 1.5rem; }
     .form-nav {
       display: flex;
       justify-content: space-between;
@@ -336,7 +339,7 @@ import { Router } from '@angular/router';
       font-weight: 500;
     }
     @media (max-width: 720px) {
-      .grid-2 {
+      .grid-2, .documents-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -357,6 +360,7 @@ export class InscriptionComponent implements OnInit {
   cityFilter = '';
   centreFilter = '';
   specialiteFilter = '';
+  documentFiles: { cin?: File; cv?: File; diplome?: File } = {};
 
   get filteredCentres(): Centre[] {
     let centres = this.centreList;
@@ -420,11 +424,6 @@ export class InscriptionComponent implements OnInit {
       etablissement: ['', Validators.required],
       specialiteDiplome: ['', Validators.required],
       experienceProfessionnelle: [''],
-      documentCin: ['', Validators.required],
-      documentCv: ['', Validators.required],
-      documentDiplome: ['', Validators.required],
-      notificationEmail: [true],
-      notificationSms: [false],
       acceptTerms: [false, Validators.requiredTrue]
     });
 
@@ -447,7 +446,7 @@ export class InscriptionComponent implements OnInit {
       return;
     }
 
-    if (this.step === 4 && this.isStepInvalid(['intituleDiplome', 'niveau', 'anneeObtention', 'etablissement', 'specialiteDiplome', 'experienceProfessionnelle'])) {
+    if (this.step === 4 && (this.isStepInvalid(['intituleDiplome', 'niveau', 'anneeObtention', 'etablissement', 'specialiteDiplome', 'experienceProfessionnelle']) || !this.hasAllDocuments())) {
       this.errorMessage = 'Veuillez compléter le parcours académique et l’expérience professionnelle.';
       return;
     }
@@ -467,6 +466,9 @@ export class InscriptionComponent implements OnInit {
     if (this.form.invalid) {
       this.errorMessage = 'Veuillez vérifier tous les champs et accepter les conditions d’utilisation.';
       this.form.markAllAsTouched();
+      return;
+    }
+    if (!this.hasAllDocuments()) {
       return;
     }
 
@@ -503,18 +505,9 @@ export class InscriptionComponent implements OnInit {
         anneeObtention: +val.anneeObtention
       },
       experienceProfessionnelle: val.experienceProfessionnelle,
-      documents: {
-        cin: val.documentCin,
-        cv: val.documentCv,
-        diplome: val.documentDiplome
-      },
-      notifications: {
-        email: val.notificationEmail,
-        sms: val.notificationSms
-      }
     };
 
-    this.api.postuler(candidature).subscribe({
+    this.api.postulerAvecDocuments(candidature, this.documentFiles as { cin: File; cv: File; diplome: File }).subscribe({
       next: (res) => {
         this.loading = false;
         if (res.success) {
@@ -561,6 +554,29 @@ export class InscriptionComponent implements OnInit {
   onCityFilterChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.cityFilter = select.value;
+  }
+
+  onDocumentSelected(event: Event, type: 'cin' | 'cv' | 'diplome'): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      this.errorMessage = 'Veuillez sélectionner un fichier PDF.';
+      (event.target as HTMLInputElement).value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      this.errorMessage = 'Chaque document doit faire au maximum 5 Mo.';
+      (event.target as HTMLInputElement).value = '';
+      return;
+    }
+    this.documentFiles[type] = file;
+    this.errorMessage = '';
+  }
+
+  private hasAllDocuments(): this is this & { documentFiles: { cin: File; cv: File; diplome: File } } {
+    const complete = !!this.documentFiles.cin && !!this.documentFiles.cv && !!this.documentFiles.diplome;
+    if (!complete) this.errorMessage = 'Veuillez joindre la CIN, le CV et les diplômes au format PDF.';
+    return complete;
   }
 
   private isStepInvalid(controls: string[]) {

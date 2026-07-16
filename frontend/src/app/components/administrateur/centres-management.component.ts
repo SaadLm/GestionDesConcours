@@ -19,47 +19,10 @@ import { Centre, CentreSpecialiteAllocation, Specialite } from '../../models/mod
         <div class="hero-pill">{{ centres.length }} centres</div>
       </div>
 
+      <button class="btn btn-primary ajouter-btn" type="button" (click)="showForm = !showForm">Ajouter un centre</button>
       <div class="grid-layout">
-        <div class="panel">
-          <div class="panel-header">
-            <h3>{{ editingId ? 'Modifier le centre' : 'Ajouter un centre' }}</h3>
-            <button class="btn btn-secondary" type="button" (click)="cancel()" *ngIf="editingId">Annuler</button>
-          </div>
 
-          <form (ngSubmit)="submitForm()" class="stacked-form">
-            <label class="field">
-              <span>Nom du centre</span>
-              <input type="text" [(ngModel)]="form.nom" name="nom" placeholder="Ex. Centre de Rabat" required>
-            </label>
-
-            <label class="field">
-              <span>Ville</span>
-              <input type="text" [(ngModel)]="form.ville" name="ville" placeholder="Ex. Rabat" required>
-            </label>
-
-            <label class="field">
-              <span>Adresse</span>
-              <input type="text" [(ngModel)]="form.adresse" name="adresse" placeholder="Adresse complète">
-            </label>
-
-            <label class="field">
-              <span>Téléphone</span>
-              <input type="text" [(ngModel)]="form.telephone" name="telephone" placeholder="Téléphone">
-            </label>
-
-            <div class="form-actions">
-              <button class="btn btn-primary" type="submit" [disabled]="saving">
-                <span *ngIf="!saving">{{ editingId ? 'Enregistrer les modifications' : 'Créer le centre' }}</span>
-                <span *ngIf="saving">Enregistrement...</span>
-              </button>
-            </div>
-
-            <div class="alert" *ngIf="message" [class.success]="messageType === 'success'" [class.error]="messageType === 'error'">
-              {{ message }}
-            </div>
-          </form>
         </div>
-
         <div class="panel">
           <div class="panel-header">
             <h3>Liste des centres</h3>
@@ -83,13 +46,104 @@ import { Centre, CentreSpecialiteAllocation, Specialite } from '../../models/mod
                   <button class="btn btn-primary" type="button" (click)="toggleCentreSpecialites(centre)">
                     {{ expandedCentreId === centre.id ? '🔽 Masquer spécialités' : '📄 Afficher spécialités' }}
                   </button>
-                  <button class="btn btn-danger" type="button" (click)="deleteCentre(centre.id)">Supprimer</button>
+                  <button class="btn" type="button" (click)="deleteCentre(centre.id)">Supprimer</button>
                 </div>
               </article>
             </ng-container>
           </div>
-        </div>
       </div>
+
+       
+
+      <div class="overlay-backdrop floating-backdrop" *ngIf="showForm" (click)="cancel()"></div>
+      <div class="panel panel-overlay" *ngIf="showForm">
+          <div class="panel-header">
+            <h3>{{ editingId ? 'Modifier le centre' : 'Ajouter un centre' }}</h3>
+          </div>
+          <button class="btn btn-secondary annuler-btn" type="button" (click)="cancel()" *ngIf="editingId">Annuler</button>
+
+          <form (ngSubmit)="submitOverlayForm()" class="stacked-form">
+            <label class="field">
+              <span>Nom du centre</span>
+              <input type="text" [(ngModel)]="overlayForm.nom" name="overlayNom" placeholder="Ex. Centre de Rabat" required>
+            </label>
+
+            <label class="field">
+              <span>Ville</span>
+              <input type="text" [(ngModel)]="overlayForm.ville" name="overlayVille" placeholder="Ex. Rabat" required>
+            </label>
+
+            <label class="field">
+              <span>Adresse</span>
+              <input type="text" [(ngModel)]="overlayForm.adresse" name="overlayAdresse" placeholder="Adresse complète">
+            </label>
+
+            <label class="field">
+              <span>Téléphone</span>
+              <input type="text" [(ngModel)]="overlayForm.telephone" name="overlayTelephone" placeholder="Téléphone">
+            </label>
+
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit" [disabled]="saving">
+                <span *ngIf="!saving">{{ editingId ? 'Enregistrer les modifications' : 'Créer le centre' }}</span>
+                <span *ngIf="saving">Enregistrement...</span>
+              </button>
+              <button type="button" class="btn btn-secondary btn-annuler" (click)="showForm = false">Annuler</button>
+            </div>
+
+            <div class="alert" *ngIf="message" [class.success]="messageType === 'success'" [class.error]="messageType === 'error'">
+              {{ message }}
+            </div>
+          </form>
+        </div>
+
+      <div class="grid-layout">
+        <div class="panel panel-edit">
+          <div class="panel-header">
+            <h3>Modifier le centre</h3>
+            <button class="btn btn-secondary" type="button" (click)="cancel()" *ngIf="editingId">Annuler</button>
+          </div>
+
+          <form (ngSubmit)="submitBottomForm()" class="stacked-form">
+            <label class="field">
+              <span>Nom du centre</span>
+              <input type="text" [(ngModel)]="bottomForm.nom" name="bottomNom" placeholder="Ex. Centre de Rabat" required>
+            </label>
+
+            <label class="field">
+              <span>Ville</span>
+              <input type="text" [(ngModel)]="bottomForm.ville" name="bottomVille" placeholder="Ex. Rabat" required>
+            </label>
+
+            <label class="field">
+              <span>Adresse</span>
+              <input type="text" [(ngModel)]="bottomForm.adresse" name="bottomAdresse" placeholder="Adresse complète">
+            </label>
+
+            <label class="field">
+              <span>Téléphone</span>
+              <input type="text" [(ngModel)]="bottomForm.telephone" name="bottomTelephone" placeholder="Téléphone">
+            </label>
+
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit" [disabled]="saving">
+                <span *ngIf="!saving">{{ editingId ? 'Enregistrer les modifications' : 'Créer le centre' }}</span>
+                <span *ngIf="saving">Enregistrement...</span>
+              </button>
+            </div>
+
+            <div class="alert" *ngIf="message" [class.success]="messageType === 'success'" [class.error]="messageType === 'error'">
+              {{ message }}
+            </div>
+          </form>
+        </div>
+
+        
+        
+      </div>
+     
+
+
       <div class="overlay-backdrop" *ngIf="expandedCentreId" (click)="closeSpecialites()"></div>
       <section class="specialities-overlay" *ngIf="expandedCentreId && selectedCentre" (click)="$event.stopPropagation()">
         <div class="overlay-header">
@@ -106,7 +160,39 @@ import { Centre, CentreSpecialiteAllocation, Specialite } from '../../models/mod
         <div *ngIf="!loadingSpecialites && (!centreSpecialites[selectedCentre.id!] || centreSpecialites[selectedCentre.id!].length === 0)" class="empty-state">
           <p>Aucune spécialité assignée à ce centre.</p>
         </div>
-        <div *ngIf="!loadingSpecialites && (centreSpecialites[selectedCentre.id!]?.length ?? 0) > 0" class="specialities-list">
+
+        <button class="btn btn-primary add-speciality-btn" type="button" (click)="toggleAddSpecialityForm()" *ngIf="!showAddSpecialityForm">
+          + Ajouter une spécialité
+        </button>
+
+        <div class="add-speciality-form" *ngIf="showAddSpecialityForm">
+          <div class="form-header">
+            <h4>Ajouter une spécialité</h4>
+            <button class="btn btn-secondary btn-sm" type="button" (click)="toggleAddSpecialityForm()">Annuler</button>
+          </div>
+          <form (ngSubmit)="addSpecialiteToCentre()" class="stacked-form">
+            <label class="field">
+              <span>Spécialité</span>
+              <select [(ngModel)]="newSpecialityForm.specialiteId" name="specialite" required>
+                <option [ngValue]="null">Sélectionner une spécialité</option>
+                <option *ngFor="let spec of getAvailableSpecialites()" [ngValue]="spec.id">
+                  {{ spec.nom }}
+                </option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Nombre de places</span>
+              <input type="number" min="1" [(ngModel)]="newSpecialityForm.nombrePlaces" name="nombrePlaces" required>
+            </label>
+            <div class="form-actions">
+              <button class="btn btn-primary btn-sm" type="submit" [disabled]="saving">
+                <span *ngIf="!saving">Ajouter</span>
+                <span *ngIf="saving">Ajout...</span>
+              </button>
+            </div>
+          </form>
+        </div>
+        <div *ngIf="!loadingSpecialites && (centreSpecialites[selectedCentre.id!] || []).length > 0" class="specialities-list">
           <article class="speciality-card" *ngFor="let allocation of centreSpecialites[selectedCentre.id!]">
             <div class="speciality-header">
               <h5>{{ allocation.specialite?.nom }}</h5>
@@ -116,6 +202,7 @@ import { Centre, CentreSpecialiteAllocation, Specialite } from '../../models/mod
             <div class="speciality-actions">
               <button class="btn btn-secondary btn-sm" type="button" (click)="startEditSpecialite(allocation)">Modifier spécialité</button>
               <button class="btn btn-secondary btn-sm" type="button" (click)="togglePlacesEdit(allocation)">Modifier places</button>
+              <button class="btn btn-danger btn-sm" type="button" (click)="deleteSpecialiteFromCentre(allocation.id!)">Supprimer</button>
             </div>
 
             <form *ngIf="editingAllocation?.id === allocation.id" (ngSubmit)="saveSpecialiteEdit()" class="edit-speciality-form">
@@ -183,11 +270,37 @@ import { Centre, CentreSpecialiteAllocation, Specialite } from '../../models/mod
       gap: 1.5rem;
     }
     .panel {
-      border: 1px solid var(--border);
-      border-radius: 18px;
+      /* border: 1px solid var(--border); 
+      
+      border-radius: 18px;*/
       padding: 1.25rem;
       background: var(--surface);
       box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+    }
+    .panel-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(92vw, 560px);
+      z-index: 1000;
+      background:  #ffffff ;
+      /* ... 
+       border-color: #74f4fd;*/
+      box-shadow: 0 24px 80px rgba(15, 23, 42, 0.18);
+    }
+    .floating-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      z-index: 999;
+    }
+    .panel-edit {
+      display: block;
+      width: 100vh;
+      background: #fefefe;
+      /* ... 
+       border-color: #cbd5e1;*/
     }
     .panel-header {
       display: flex;
@@ -213,6 +326,12 @@ import { Centre, CentreSpecialiteAllocation, Specialite } from '../../models/mod
       border-radius: 12px;
       font-size: 1rem;
       background: #fff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .field input:focus {
+      outline: none;
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
     }
     .form-actions {
       display: flex;
@@ -339,6 +458,96 @@ import { Centre, CentreSpecialiteAllocation, Specialite } from '../../models/mod
       color: var(--text-muted);
       font-size: 0.95rem;
     }
+    .ajouter-btn{
+      margin-left: 70%;
+      width: 30vh;
+    }
+    .annuler-btn{
+      margin-left: 1rem;
+    }
+    .add-speciality-btn {
+      width: 100%;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+    .add-speciality-form {
+      margin-top: 1rem;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(248,250,252,0.96);
+    }
+    .add-speciality-form .form-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .add-speciality-form .form-header h4 {
+      margin: 0;
+      font-size: 1rem;
+    }
+    .add-speciality-form select {
+      padding: 0.9rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 1rem;
+      background: #fff;
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+    /* Dark background */
+.overlay {
+  position: fixed;
+  top: 10%;
+  left: 10%;
+  width: 70%;
+  height: 70%;
+
+  background: rgb(255, 255, 255);
+
+  /* display: flex */
+  justify-content: center;
+  align-items: center;
+
+  z-index: 1000;
+}
+
+/* Popup */
+.modal {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  width: 70%;
+  max-width: 90%;
+
+  box-shadow: 0 10px 25px rgba(1, 0, 0, 1);
+}
+
+.modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.modal input {
+  padding: 10px;
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+    .panel-form.active{
+      max-height: 500px;
+      opacity: 1;
+    }
     @media (max-width: 900px) {
       .grid-layout {
         grid-template-columns: 1fr;
@@ -353,24 +562,32 @@ import { Centre, CentreSpecialiteAllocation, Specialite } from '../../models/mod
 export class CentresManagementComponent implements OnInit {
   centres: Centre[] = [];
   centreSpecialites: Record<number, CentreSpecialiteAllocation[]> = {};
+  allSpecialites: Specialite[] = [];
   expandedCentreId?: number;
   selectedCentre?: Centre;
   editingAllocation?: CentreSpecialiteAllocation;
   allocationEditForm: Specialite = { nom: '', description: '' };
   placesEditAllocation?: CentreSpecialiteAllocation;
   placesEditForm: { nombrePlaces: number } = { nombrePlaces: 0 };
-  form: Centre = { nom: '', ville: '', adresse: '', telephone: '' };
+  overlayForm: Centre = { nom: '', ville: '', adresse: '', telephone: '' };
+  bottomForm: Centre = { nom: '', ville: '', adresse: '', telephone: '' };
   editingId: number | null = null;
   loading = false;
   loadingSpecialites = false;
+  loadingAllSpecialites = false;
   saving = false;
   message = '';
   messageType: 'success' | 'error' = 'success';
+  showAddSpecialityForm = false;
+  newSpecialityForm: { specialiteId: number | null; nombrePlaces: number } = { specialiteId: null, nombrePlaces: 1 };
+
+  showForm=false;
 
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
     this.loadCentres();
+    this.loadAllSpecialites();
   }
 
   loadCentres(): void {
@@ -386,6 +603,25 @@ export class CentresManagementComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  loadAllSpecialites(): void {
+    this.loadingAllSpecialites = true;
+    this.api.getAdminSpecialites().subscribe({
+      next: (res) => {
+        this.allSpecialites = res.data || [];
+        this.loadingAllSpecialites = false;
+      },
+      error: () => {
+        this.message = 'Impossible de charger les spécialités.';
+        this.messageType = 'error';
+        this.loadingAllSpecialites = false;
+      }
+    });
+  }
+
+  toggleForm(){
+    this.showForm=!this.showForm;
   }
 
   toggleCentreSpecialites(centre: Centre): void {
@@ -485,8 +721,16 @@ export class CentresManagementComponent implements OnInit {
     this.placesEditAllocation = undefined;
   }
 
-  submitForm(): void {
-    if (!this.form.nom?.trim() || !this.form.ville?.trim()) {
+  submitOverlayForm(): void {
+    this.saveCentreForm(this.overlayForm);
+  }
+
+  submitBottomForm(): void {
+    this.saveCentreForm(this.bottomForm);
+  }
+
+  private saveCentreForm(form: Centre): void {
+    if (!form.nom?.trim() || !form.ville?.trim()) {
       this.message = 'Le nom et la ville du centre sont obligatoires.';
       this.messageType = 'error';
       return;
@@ -494,40 +738,28 @@ export class CentresManagementComponent implements OnInit {
 
     this.saving = true;
     const payload: Centre = {
-      nom: this.form.nom.trim(),
-      ville: this.form.ville.trim(),
-      adresse: this.form.adresse?.trim(),
-      telephone: this.form.telephone?.trim()
+      nom: form.nom.trim(),
+      ville: form.ville.trim(),
+      adresse: form.adresse?.trim(),
+      telephone: form.telephone?.trim()
     };
 
-    if (this.editingId) {
-      this.api.updateCentre(this.editingId, payload).subscribe({
-        next: () => {
-          this.message = 'Centre mis à jour avec succès.';
-          this.messageType = 'success';
-          this.cancel();
-          this.loadCentres();
-          this.saving = false;
-        },
-        error: () => {
-          this.message = 'La mise à jour a échoué.';
-          this.messageType = 'error';
-          this.saving = false;
-        }
-      });
-      return;
-    }
+    const request = this.editingId
+      ? this.api.updateCentre(this.editingId, payload)
+      : this.api.createCentre(payload);
 
-    this.api.createCentre(payload).subscribe({
+    request.subscribe({
       next: () => {
-        this.message = 'Centre créé avec succès.';
+        this.message = this.editingId ? 'Centre mis à jour avec succès.' : 'Centre créé avec succès.';
         this.messageType = 'success';
-        this.form = { nom: '', ville: '', adresse: '', telephone: '' };
+        this.editingId = null;
+        this.showForm = false;
+        this.resetCentreForms();
         this.loadCentres();
         this.saving = false;
       },
       error: () => {
-        this.message = 'La création a échoué.';
+        this.message = this.editingId ? 'La mise à jour a échoué.' : 'La création a échoué.';
         this.messageType = 'error';
         this.saving = false;
       }
@@ -536,7 +768,8 @@ export class CentresManagementComponent implements OnInit {
 
   editCentre(centre: Centre): void {
     this.editingId = centre.id ?? null;
-    this.form = { ...centre };
+    this.overlayForm = { ...centre };
+    this.bottomForm = { ...centre };
     this.message = '';
   }
 
@@ -559,7 +792,81 @@ export class CentresManagementComponent implements OnInit {
 
   cancel(): void {
     this.editingId = null;
-    this.form = { nom: '', ville: '', adresse: '', telephone: '' };
+    this.showForm = false;
+    this.resetCentreForms();
     this.message = '';
+  }
+
+  private resetCentreForms(): void {
+    this.overlayForm = { nom: '', ville: '', adresse: '', telephone: '' };
+    this.bottomForm = { nom: '', ville: '', adresse: '', telephone: '' };
+  }
+
+  getAvailableSpecialites(): Specialite[] {
+    if (!this.selectedCentre?.id) return this.allSpecialites;
+    const existingSpecialiteIds = (this.centreSpecialites[this.selectedCentre.id] || [])
+      .map(allocation => allocation.specialite?.id)
+      .filter((id): id is number => id !== undefined);
+    return this.allSpecialites.filter(spec => !existingSpecialiteIds.includes(spec.id!));
+  }
+
+  toggleAddSpecialityForm(): void {
+    this.showAddSpecialityForm = !this.showAddSpecialityForm;
+    if (this.showAddSpecialityForm) {
+      this.newSpecialityForm = { specialiteId: null, nombrePlaces: 1 };
+    }
+  }
+
+  addSpecialiteToCentre(): void {
+    if (!this.selectedCentre?.id || !this.newSpecialityForm.specialiteId) {
+      this.message = 'Veuillez sélectionner une spécialité.';
+      this.messageType = 'error';
+      return;
+    }
+    if (this.newSpecialityForm.nombrePlaces < 1) {
+      this.message = 'Le nombre de places doit être au moins 1.';
+      this.messageType = 'error';
+      return;
+    }
+
+    const centreId = this.selectedCentre.id;
+    this.saving = true;
+    this.api.createCentreSpecialite({
+      centreId: centreId,
+      specialiteId: this.newSpecialityForm.specialiteId,
+      nombrePlaces: this.newSpecialityForm.nombrePlaces
+    }).subscribe({
+      next: () => {
+        this.message = 'Spécialité ajoutée avec succès.';
+        this.messageType = 'success';
+        this.showAddSpecialityForm = false;
+        this.newSpecialityForm = { specialiteId: null, nombrePlaces: 1 };
+        this.loadCentreSpecialites(centreId);
+        this.saving = false;
+      },
+      error: () => {
+        this.message = 'Impossible d\'ajouter la spécialité.';
+        this.messageType = 'error';
+        this.saving = false;
+      }
+    });
+  }
+
+  deleteSpecialiteFromCentre(allocationId: number): void {
+    if (!window.confirm('Supprimer cette spécialité du centre ?')) return;
+
+    this.api.deleteCentreSpecialite(allocationId).subscribe({
+      next: () => {
+        this.message = 'Spécialité supprimée avec succès.';
+        this.messageType = 'success';
+        if (this.selectedCentre?.id) {
+          this.loadCentreSpecialites(this.selectedCentre.id);
+        }
+      },
+      error: () => {
+        this.message = 'Impossible de supprimer la spécialité.';
+        this.messageType = 'error';
+      }
+    });
   }
 }

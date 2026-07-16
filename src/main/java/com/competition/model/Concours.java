@@ -37,4 +37,8 @@ public class Concours {
     @ManyToOne
     @JoinColumn(name = "centre_id")
     private Centre centre;
+
+    @ManyToOne
+    @JoinColumn(name = "specialite_id")
+    private Specialite specialite;
 }

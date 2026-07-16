@@ -46,7 +46,6 @@ public class Candidature {
     private String commentaire;
 
     @OneToMany(mappedBy = "candidature", cascade = CascadeType.ALL)
-    @JsonIgnore
     private List<Document> documents;
 
     @ManyToOne

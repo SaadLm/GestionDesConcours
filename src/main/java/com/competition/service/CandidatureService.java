@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Year;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class CandidatureService {
     private final CentreSpecialiteRepository centreSpecialiteRepository;
     private final CandidatRepository candidatRepository;
     private final SalleRepository salleRepository;
+    private final FileStorageService fileStorageService;
 
     @Transactional
     public Candidature soumettreCandidature(Candidature candidature) {
@@ -66,6 +69,29 @@ public class CandidatureService {
         candidature.setCandidat(candidat);
 
         return candidatureRepository.save(candidature);
+    }
+
+    @Transactional
+    public Candidature soumettreCandidatureAvecDocuments(Candidature candidature,
+            MultipartFile cin, MultipartFile cv, MultipartFile diplome) {
+        Candidature saved = soumettreCandidature(candidature);
+        List<Document> documents = new ArrayList<>();
+        documents.add(createDocument(saved, cin, TypeDocument.CIN, "cin"));
+        documents.add(createDocument(saved, cv, TypeDocument.CV, "cv"));
+        documents.add(createDocument(saved, diplome, TypeDocument.DIPLOME, "diplome"));
+        saved.setDocuments(documents);
+        return candidatureRepository.save(saved);
+    }
+
+    private Document createDocument(Candidature candidature, MultipartFile file,
+            TypeDocument type, String prefix) {
+        String storedName = fileStorageService.storePdf(file, prefix);
+        return Document.builder()
+                .candidature(candidature)
+                .nomFichier(file.getOriginalFilename())
+                .cheminFichier(storedName)
+                .typeDocument(type)
+                .build();
     }
 
 

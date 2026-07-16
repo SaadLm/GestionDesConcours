@@ -1,8 +1,13 @@
 package com.competition.controller;
 
 import com.competition.dto.ApiResponse;
+import com.competition.dto.CentreSpecialiteRequest;
+import com.competition.model.Centre;
 import com.competition.model.CentreSpecialite;
+import com.competition.model.Specialite;
+import com.competition.repository.CentreRepository;
 import com.competition.repository.CentreSpecialiteRepository;
+import com.competition.repository.SpecialiteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +22,8 @@ import java.util.List;
 public class AdminCentreSpecialiteController {
 
     private final CentreSpecialiteRepository centreSpecialiteRepository;
+    private final CentreRepository centreRepository;
+    private final SpecialiteRepository specialiteRepository;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<CentreSpecialite>>> getAllCentreSpecialites() {
@@ -42,7 +49,18 @@ public class AdminCentreSpecialiteController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<CentreSpecialite>> createAllocation(
-            @RequestBody CentreSpecialite allocation) {
+            @RequestBody CentreSpecialiteRequest request) {
+        Centre centre = centreRepository.findById(request.getCentreId())
+                .orElseThrow(() -> new RuntimeException("Centre non trouvé."));
+        Specialite specialite = specialiteRepository.findById(request.getSpecialiteId())
+                .orElseThrow(() -> new RuntimeException("Spécialité non trouvée."));
+        
+        CentreSpecialite allocation = CentreSpecialite.builder()
+                .centre(centre)
+                .specialite(specialite)
+                .nombrePlaces(request.getNombrePlaces())
+                .build();
+        
         CentreSpecialite saved = centreSpecialiteRepository.save(allocation);
         return ResponseEntity.ok(ApiResponse.<CentreSpecialite>builder()
                 .success(true)

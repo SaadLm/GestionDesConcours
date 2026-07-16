@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
-import { Centre, Concours, Candidature } from '../../models/models';
+import { Centre, Concours, Candidature, Specialite, UploadedDocument } from '../../models/models';
 
 @Component({
   selector: 'app-competition-management',
@@ -38,6 +38,12 @@ import { Centre, Concours, Candidature } from '../../models/models';
             <div class="card-body">
               <p class="description">{{ comp.description || '—' }}</p>
               <div class="dates">
+                <span class="date-item" *ngIf="comp.centre">
+                  <strong>Centre:</strong> {{ comp.centre.nom }} ({{ comp.centre.ville }})
+                </span>
+                <span class="date-item" *ngIf="comp.specialite">
+                  <strong>Spécialité:</strong> {{ comp.specialite.nom }}
+                </span>
                 <span class="date-item">
                   <strong>Concours:</strong> {{ comp.dateConcours | date: 'dd/MM/yyyy' }}
                 </span>
@@ -76,17 +82,27 @@ import { Centre, Concours, Candidature } from '../../models/models';
         </div>
         <div *ngIf="!loadingCandidates && candidatureList.length > 0" class="candidates-grid">
           <article class="candidate-card" *ngFor="let candidate of candidatureList">
-            <div class="candidate-summary">
-              <h5>{{ candidate.candidat.prenom }} {{ candidate.candidat.nom }}</h5>
-              <p><strong>CIN :</strong> {{ candidate.candidat.cin }}</p>
-              <p><strong>Statut :</strong> {{ candidate.statut || 'EN_ATTENTE' }}</p>
-              <p><strong>Commentaire :</strong> {{ candidate.commentaire || 'Aucun' }}</p>
+            <div class="candidate-row">
+              <div>
+                <h5>{{ candidate.candidat.prenom }} {{ candidate.candidat.nom }}</h5>
+                <span>{{ candidate.candidat.cin }}</span>
+              </div>
+              <span class="candidate-status">{{ candidate.statut || 'EN_ATTENTE' }}</span>
+              <div class="document-actions" *ngIf="candidate.documents?.length">
+                <button class="pdf-button" type="button" *ngFor="let document of candidate.documents" (click)="openDocument(candidate, document)" [title]="'Ouvrir ' + document.nomFichier">
+                  📄 {{ document.typeDocument }}
+                </button>
+              </div>
+              <button class="btn btn-secondary btn-sm" type="button" (click)="toggleCandidateDetails(candidate.id!)">
+                {{ expandedCandidateId === candidate.id ? 'Masquer' : 'Détails' }}
+              </button>
             </div>
-            <div class="candidate-details">
+            <div class="candidate-details" *ngIf="expandedCandidateId === candidate.id">
               <p><strong>Email :</strong> {{ candidate.candidat.email }}</p>
               <p><strong>Téléphone :</strong> {{ candidate.candidat.telephone }}</p>
               <p><strong>Centre :</strong> {{ candidate.centre.nom }}</p>
               <p><strong>Spécialité :</strong> {{ candidate.specialite.nom }}</p>
+              <p><strong>Commentaire :</strong> {{ candidate.commentaire || 'Aucun' }}</p>
               <div class="diplomas" *ngIf="candidate.candidat.diplomes && candidate.candidat.diplomes.length > 0">
                 <strong>Diplômes :</strong>
                 <ul>
@@ -125,13 +141,25 @@ import { Centre, Concours, Candidature } from '../../models/models';
             </div>
 
             <div class="form-group">
-              <label>Centre associé</label>
-              <select [(ngModel)]="formConcours.centre" name="centre" class="form-control">
+              <label>Centre associé *</label>
+              <select [(ngModel)]="formConcours.centre" name="centre" class="form-control" [class.error]="errors['centre']" (change)="onCentreChange()">
                 <option [ngValue]="undefined">-- Aucun centre --</option>
                 <option *ngFor="let centre of centres" [ngValue]="centre">
                   {{ centre.nom }} — {{ centre.ville }}
                 </option>
               </select>
+              <span class="error-message" *ngIf="errors['centre']">{{ errors['centre'] }}</span>
+            </div>
+
+            <div class="form-group">
+              <label>Spécialité *</label>
+              <select [(ngModel)]="formConcours.specialite" name="specialite" class="form-control" [class.error]="errors['specialite']" [disabled]="!formConcours.centre">
+                <option [ngValue]="undefined">-- Choisir une spécialité --</option>
+                <option *ngFor="let spec of availableSpecialites" [ngValue]="spec">
+                  {{ spec.nom }}
+                </option>
+              </select>
+              <span class="error-message" *ngIf="errors['specialite']">{{ errors['specialite'] }}</span>
             </div>
 
             <div class="form-group">
@@ -229,13 +257,25 @@ import { Centre, Concours, Candidature } from '../../models/models';
             </div>
 
             <div class="form-group">
-              <label>Centre associé</label>
-              <select [(ngModel)]="formConcours.centre" name="centre" class="form-control">
+              <label>Centre associé *</label>
+              <select [(ngModel)]="formConcours.centre" name="centre" class="form-control" [class.error]="errors['centre']" (change)="onCentreChange()">
                 <option [ngValue]="undefined">-- Aucun centre --</option>
                 <option *ngFor="let centre of centres" [ngValue]="centre">
                   {{ centre.nom }} — {{ centre.ville }}
                 </option>
               </select>
+              <span class="error-message" *ngIf="errors['centre']">{{ errors['centre'] }}</span>
+            </div>
+
+            <div class="form-group">
+              <label>Spécialité *</label>
+              <select [(ngModel)]="formConcours.specialite" name="specialite" class="form-control" [class.error]="errors['specialite']" [disabled]="!formConcours.centre">
+                <option [ngValue]="undefined">-- Choisir une spécialité --</option>
+                <option *ngFor="let spec of availableSpecialites" [ngValue]="spec">
+                  {{ spec.nom }}
+                </option>
+              </select>
+              <span class="error-message" *ngIf="errors['specialite']">{{ errors['specialite'] }}</span>
             </div>
 
             <div class="form-group">
@@ -621,8 +661,32 @@ import { Centre, Concours, Candidature } from '../../models/models';
       border-radius: 14px;
       padding: 1rem;
       background: rgba(248, 250, 252, 0.98);
+      padding: 0.85rem 1rem;
+    }
+    .candidate-row {
       display: grid;
+      grid-template-columns: minmax(170px, 1fr) auto minmax(180px, auto) auto;
+      align-items: center;
       gap: 1rem;
+    }
+    .candidate-row h5 { margin: 0 0 0.2rem; }
+    .candidate-row span { color: var(--text-muted); font-size: 0.88rem; }
+    .candidate-status {
+      padding: 0.3rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(249, 115, 22, 0.1);
+      color: var(--primary);
+      white-space: nowrap;
+    }
+    .document-actions { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+    .pdf-button {
+      border: 1px solid #f97316;
+      background: #fff7ed;
+      color: #9a3412;
+      border-radius: 6px;
+      padding: 0.3rem 0.45rem;
+      cursor: pointer;
+      font-size: 0.78rem;
     }
     .candidate-summary,
     .candidate-details {
@@ -633,6 +697,7 @@ import { Centre, Concours, Candidature } from '../../models/models';
       display: flex;
       gap: 0.75rem;
       flex-wrap: wrap;
+      margin-top: 0.85rem;
     }
     .diplomas ul {
       margin: 0.5rem 0 0;
@@ -655,18 +720,21 @@ import { Centre, Concours, Candidature } from '../../models/models';
       .form-actions {
         flex-direction: column;
       }
+      .candidate-row { grid-template-columns: 1fr; gap: 0.55rem; }
     }
   `]
 })
 export class CompetitionManagementComponent implements OnInit {
   concours: Concours[] = [];
   centres: Centre[] = [];
+  availableSpecialites: Specialite[] = [];
   editingConcours: Concours | null = null;
   formConcours: Concours = this.emptyForm();
   canManage = false;
   activeConcoursId?: number;
   selectedConcours?: Concours;
   candidatureList: Candidature[] = [];
+  expandedCandidateId?: number;
   loadingCandidates = false;
 
   loadingConcours = false;
@@ -695,7 +763,8 @@ export class CompetitionManagementComponent implements OnInit {
       dateDebutInscription: '',
       dateFinInscription: '',
       statut: 'OUVERT',
-      centre: undefined
+      centre: undefined,
+      specialite: undefined
     };
   }
 
@@ -718,8 +787,14 @@ export class CompetitionManagementComponent implements OnInit {
     this.editingConcours = comp;
     this.formConcours = {
       ...comp,
-      centre: comp.centre ? { ...comp.centre } : undefined
+      centre: comp.centre ? { ...comp.centre } : undefined,
+      specialite: comp.specialite ? { ...comp.specialite } : undefined
     };
+    if (comp.centre && comp.centre.id) {
+      this.loadSpecialitesForCentre(comp.centre.id);
+    } else {
+      this.availableSpecialites = [];
+    }
   }
 
   toggleCandidates(comp: Concours): void {
@@ -736,6 +811,7 @@ export class CompetitionManagementComponent implements OnInit {
     this.activeConcoursId = undefined;
     this.selectedConcours = undefined;
     this.candidatureList = [];
+    this.expandedCandidateId = undefined;
   }
 
   loadCandidates(concoursId: number): void {
@@ -749,6 +825,22 @@ export class CompetitionManagementComponent implements OnInit {
         this.candidatureList = [];
         this.loadingCandidates = false;
       }
+    });
+  }
+
+  toggleCandidateDetails(candidateId: number): void {
+    this.expandedCandidateId = this.expandedCandidateId === candidateId ? undefined : candidateId;
+  }
+
+  openDocument(candidate: Candidature, document: UploadedDocument): void {
+    if (!candidate.id) return;
+    this.api.getCandidateDocument(candidate.id, document.id).subscribe({
+      next: (file) => {
+        const url = URL.createObjectURL(file);
+        window.open(url, '_blank', 'noopener');
+        window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      },
+      error: () => window.alert('Impossible d’ouvrir ce document.')
     });
   }
 
@@ -775,6 +867,7 @@ export class CompetitionManagementComponent implements OnInit {
   cancelEdit(): void {
     this.editingConcours = null;
     this.formConcours = this.emptyForm();
+    this.availableSpecialites = [];
     this.errors = {};
   }
 
@@ -783,6 +876,12 @@ export class CompetitionManagementComponent implements OnInit {
 
     if (!this.formConcours.titre?.trim() || (this.formConcours.titre?.trim().length ?? 0) < 3) {
       this.errors['titre'] = 'Le titre doit contenir au moins 3 caractères.';
+    }
+    if (!this.formConcours.centre || !this.formConcours.centre.id) {
+      this.errors['centre'] = 'Le centre est requis.';
+    }
+    if (!this.formConcours.specialite || !this.formConcours.specialite.id) {
+      this.errors['specialite'] = 'La spécialité est requise.';
     }
     if (!this.formConcours.dateConcours) {
       this.errors['dateConcours'] = 'La date du concours est requise.';
@@ -810,6 +909,33 @@ export class CompetitionManagementComponent implements OnInit {
         // centre list failed to load; form can still function without it
       }
     });
+  }
+
+  loadSpecialitesForCentre(centreId: number): void {
+    this.api.getCentreSpecialitesByCentre(centreId).subscribe({
+      next: (res) => {
+        this.availableSpecialites = (res.data || [])
+          .map(alloc => alloc.specialite)
+          .filter((spec): spec is Specialite => !!spec);
+        
+        if (this.formConcours.specialite && !this.availableSpecialites.some(s => s.id === this.formConcours.specialite?.id)) {
+          this.formConcours.specialite = undefined;
+        }
+      },
+      error: () => {
+        this.availableSpecialites = [];
+        this.formConcours.specialite = undefined;
+      }
+    });
+  }
+
+  onCentreChange(): void {
+    if (this.formConcours.centre && this.formConcours.centre.id) {
+      this.loadSpecialitesForCentre(this.formConcours.centre.id);
+    } else {
+      this.availableSpecialites = [];
+      this.formConcours.specialite = undefined;
+    }
   }
 
   saveConcours(): void {
