@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface SalleRepository extends JpaRepository<Salle, Long> {
     List<Salle> findByCentreId(Long centreId);
+    List<Salle> findByCentreIdAndSpecialiteId(Long centreId, Long specialiteId);
 }

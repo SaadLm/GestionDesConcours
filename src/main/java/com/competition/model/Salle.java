@@ -26,4 +26,8 @@ public class Salle {
     @JoinColumn(name = "centre_id", nullable = false)
     @JsonIgnore
     private Centre centre;
+
+    @ManyToOne
+    @JoinColumn(name = "specialite_id")
+    private Specialite specialite;
 }

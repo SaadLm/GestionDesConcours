@@ -101,6 +101,7 @@ export class SupervisionLayoutComponent implements OnInit {
     { label: 'Concours', route: 'competitions', icon: '📋', description: 'Configuration des concours' },
     { label: 'Spécialités', route: 'specialties', icon: '🎯', description: 'Créer, modifier et supprimer les spécialités' },
     { label: 'Centres', route: 'centres', icon: '🏛️', description: 'Gérer les centres d\'examen' },
+    { label: 'Salles', route: 'salles', icon: '🚪', description: 'Créer et rattacher les salles aux centres et spécialités' },
     { label: 'Affectations salles', route: 'centre-assignments', icon: '🪑', description: 'Voir les candidats par centre et changer la salle' },
     { label: 'Allocations', route: 'specialty-allocations', icon: '🧾', description: 'Attribuer les spécialités aux centres' },
     { label: 'Rapports & Statistiques', route: 'reports', icon: '📊', description: 'Génération de rapports et statistiques' }
@@ -110,6 +111,7 @@ export class SupervisionLayoutComponent implements OnInit {
     { label: 'Concours', route: 'competitions', icon: '📋', description: 'Consultation des concours' },
     { label: 'Spécialités', route: 'specialties', icon: '🎯', description: 'Gérer les spécialités' },
     { label: 'Centres', route: 'centres', icon: '🏛️', description: 'Gérer les centres d\'examen' },
+    { label: 'Salles', route: 'salles', icon: '🚪', description: 'Créer et rattacher les salles aux centres et spécialités' },
     { label: 'Affectations salles', route: 'centre-assignments', icon: '🪑', description: 'Suivre les candidats et leurs salles' },
     { label: 'Allocations', route: 'specialty-allocations', icon: '🧾', description: 'Consulter les allocations par centre' },
     { label: 'Rapports & Statistiques', route: 'reports', icon: '📊', description: 'Génération de rapports et statistiques' }

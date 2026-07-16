@@ -5,13 +5,13 @@
 }
 
 .sidebar {
-  background: var(--surface);
-  color: var(--text);
+  background: var(--primary);
+  color: #fff;
   padding: 2rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
-  border-right: 1px solid var(--border);
+  border-right: 4px solid var(--accent);
 }
 
 .sidebar-brand {
@@ -32,7 +32,7 @@
 
 .sidebar-nav a {
   display: block;
-  color: rgba(0,0,0,0.84);
+  color: rgba(255,255,255,0.92);
   text-decoration: none;
   font-weight: 600;
   padding: 0.9rem 1rem;
@@ -42,15 +42,16 @@
 
 .sidebar-nav a:hover,
 .sidebar-nav a.active {
-  background: rgba(249, 115, 22, 0.15);
-  color: var(--text);
+  background: rgba(255,255,255,0.12);
+  color: var(--accent);
+  border-left: 3px solid var(--accent);
 }
 
 .sidebar-role {
   margin-bottom: 1rem;
   padding: 0.9rem 1rem;
   border-radius: 0.75rem;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.1);
   border: 1px solid rgba(255,255,255,0.12);
 }
 
@@ -81,8 +82,8 @@ main {
 }
 
 .footer {
-  border-top: 1px solid rgba(148,163,184,0.16);
-  background: #f8fafc;
+  border-top: 0;
+  background: var(--primary);
 }
 
 @media (max-width: 960px) {
@@ -111,12 +112,14 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: url('../../public/logo.jpg');
+  /* background-image: url('../../public/logo.jpg'); */
+  background-image: url('../../public/logo_-_Copy-removebg-preview.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   width: 100%;
-  height: 4rem;
+  height: 5rem;
+  border-radius: 10px;
   padding: 1rem;
   cursor: pointer;
   /* margin-bottom: 1rem; */

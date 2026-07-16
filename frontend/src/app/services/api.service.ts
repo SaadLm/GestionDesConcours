@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ApiResponse, Candidature, Centre, CentreSpecialiteAllocation, Concours, ConcoursOption, ReportData, Specialite, UserBase } from '../models/models';
+import { ApiResponse, Candidature, Centre, CentreSpecialiteAllocation, Concours, ConcoursOption, ReportData, Salle, Specialite, UserBase } from '../models/models';
 
 @Injectable({
   providedIn: 'root'
@@ -85,6 +85,22 @@ export class ApiService {
       ? `${this.baseUrl}/manager/candidatures/${candidatureId}/salle?salleId=${salleId}`
       : `${this.baseUrl}/manager/candidatures/${candidatureId}/salle`;
     return this.http.put<ApiResponse<void>>(url, {});
+  }
+
+  getSalles(): Observable<ApiResponse<Salle[]>> {
+    return this.http.get<ApiResponse<Salle[]>>(`${this.baseUrl}/admin/salles`);
+  }
+
+  createSalle(payload: Salle): Observable<ApiResponse<Salle>> {
+    return this.http.post<ApiResponse<Salle>>(`${this.baseUrl}/admin/salles`, payload);
+  }
+
+  updateSalle(id: number, payload: Salle): Observable<ApiResponse<Salle>> {
+    return this.http.put<ApiResponse<Salle>>(`${this.baseUrl}/admin/salles/${id}`, payload);
+  }
+
+  deleteSalle(id: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/admin/salles/${id}`);
   }
 
   // Admin user management

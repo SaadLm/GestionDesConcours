@@ -5,6 +5,8 @@ import com.competition.model.Centre;
 import com.competition.model.Salle;
 import com.competition.repository.CentreRepository;
 import com.competition.repository.SalleRepository;
+import com.competition.repository.SpecialiteRepository;
+import com.competition.repository.CentreSpecialiteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +21,8 @@ public class SalleAdminController {
 
     private final SalleRepository salleRepository;
     private final CentreRepository centreRepository;
+    private final SpecialiteRepository specialiteRepository;
+    private final CentreSpecialiteRepository centreSpecialiteRepository;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_GLOBAL')")
@@ -44,7 +48,7 @@ public class SalleAdminController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_GLOBAL')")
     public ResponseEntity<ApiResponse<Salle>> createSalle(@RequestBody Salle salle) {
         Long centreId = salle.getCentre() != null ? salle.getCentre().getId() : null;
         if (centreId == null) {
@@ -54,6 +58,7 @@ public class SalleAdminController {
         Centre centre = centreRepository.findById(centreId)
                 .orElseThrow(() -> new RuntimeException("Centre non trouvé."));
         salle.setCentre(centre);
+        assignSpecialite(salle, salle.getSpecialite());
 
         Salle saved = salleRepository.save(salle);
         return ResponseEntity.ok(ApiResponse.<Salle>builder()
@@ -64,7 +69,7 @@ public class SalleAdminController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_GLOBAL')")
     public ResponseEntity<ApiResponse<Salle>> updateSalle(@PathVariable Long id, @RequestBody Salle request) {
         Salle salle = salleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Salle non trouvée."));
@@ -76,6 +81,7 @@ public class SalleAdminController {
                     .orElseThrow(() -> new RuntimeException("Centre non trouvé."));
             salle.setCentre(centre);
         }
+        assignSpecialite(salle, request.getSpecialite());
 
         Salle updated = salleRepository.save(salle);
         return ResponseEntity.ok(ApiResponse.<Salle>builder()
@@ -86,7 +92,7 @@ public class SalleAdminController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_GLOBAL')")
     public ResponseEntity<ApiResponse<Void>> deleteSalle(@PathVariable Long id) {
         salleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Salle non trouvée."));
@@ -95,5 +101,18 @@ public class SalleAdminController {
                 .success(true)
                 .message("Salle supprimée avec succès.")
                 .build());
+    }
+
+    private void assignSpecialite(Salle salle, com.competition.model.Specialite requestedSpecialite) {
+        Long specialiteId = requestedSpecialite != null ? requestedSpecialite.getId() : null;
+        if (specialiteId == null) {
+            throw new RuntimeException("Une spécialité doit être fournie pour la salle.");
+        }
+        if (salle.getCentre() == null || salle.getCentre().getId() == null
+                || centreSpecialiteRepository.findByCentreIdAndSpecialiteId(salle.getCentre().getId(), specialiteId).isEmpty()) {
+            throw new RuntimeException("Cette spécialité n'est pas allouée au centre sélectionné.");
+        }
+        salle.setSpecialite(specialiteRepository.findById(specialiteId)
+                .orElseThrow(() -> new RuntimeException("Spécialité non trouvée.")));
     }
 }

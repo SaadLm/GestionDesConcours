@@ -118,7 +118,11 @@ public class CandidatureService {
         }
 
         // Automatic room (salle) allocation
-        List<Salle> salles = salleRepository.findByCentreId(candidature.getCentre().getId());
+        List<Salle> salles = salleRepository.findByCentreId(candidature.getCentre().getId()).stream()
+                .filter(salle -> salle.getSpecialite() != null
+                        ? salle.getSpecialite().getId().equals(candidature.getSpecialite().getId())
+                        : candidatureRepository.countBySalleId(salle.getId()) == 0)
+                .toList();
         Salle assignedSalle = null;
         for (Salle salle : salles) {
             long assignedCount = candidatureRepository.countBySalleId(salle.getId());
@@ -136,6 +140,10 @@ public class CandidatureService {
             }
         }
 
+        if (assignedSalle.getSpecialite() == null) {
+            assignedSalle.setSpecialite(candidature.getSpecialite());
+            salleRepository.save(assignedSalle);
+        }
         candidature.setSalle(assignedSalle);
         candidature.setStatut(StatutCandidature.VALIDEE);
         candidatureRepository.save(candidature);
@@ -224,6 +232,16 @@ public class CandidatureService {
 
         if (!salle.getCentre().getId().equals(candidature.getCentre().getId())) {
             throw new BusinessException("La salle spécifiée n'appartient pas au centre de cette candidature.");
+        }
+
+        if (salle.getSpecialite() != null
+                && !salle.getSpecialite().getId().equals(candidature.getSpecialite().getId())) {
+            throw new BusinessException("La salle spécifiée n'est pas affectée à la spécialité de cette candidature.");
+        }
+
+        if (salle.getSpecialite() == null) {
+            salle.setSpecialite(candidature.getSpecialite());
+            salleRepository.save(salle);
         }
 
         long assignedCount = candidatureRepository.countBySalleId(salle.getId());

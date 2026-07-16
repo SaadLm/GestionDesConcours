@@ -14,6 +14,7 @@ import { SpecialtyManagementComponent } from './components/administrateur/specia
 import { CentresManagementComponent } from './components/administrateur/centres-management.component';
 import { CentreAssignmentsComponent } from './components/administrateur/centre-assignments.component';
 import { ReportsStatisticsComponent } from './components/administrateur/reports-statistics.component';
+import { SallesManagementComponent } from './components/administrateur/salles-management.component';
 import { adminOnlyGuard, supervisionGuard } from './guards/role.guard';
 
 export const routes: Routes = [
@@ -34,6 +35,7 @@ export const routes: Routes = [
       { path: 'specialties', component: SpecialtyManagementComponent },
       { path: 'specialty-allocations', component: SpecialtyAllocationComponent },
       { path: 'centres', component: CentresManagementComponent },
+      { path: 'salles', component: SallesManagementComponent },
       { path: 'centre-assignments', component: CentreAssignmentsComponent },
       { path: 'reports', component: ReportsStatisticsComponent }
     ]
@@ -52,6 +54,7 @@ export const routes: Routes = [
       { path: 'specialties', component: SpecialtyManagementComponent },
       { path: 'specialty-allocations', component: SpecialtyAllocationComponent },
       { path: 'centres', component: CentresManagementComponent },
+      { path: 'salles', component: SallesManagementComponent },
       { path: 'centre-assignments', component: CentreAssignmentsComponent },
       { path: 'reports', component: ReportsStatisticsComponent }
     ]

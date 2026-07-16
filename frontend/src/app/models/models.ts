@@ -61,6 +61,14 @@ export interface CentreSpecialiteAllocation {
   nombrePlaces: number;
 }
 
+export interface Salle {
+  id?: number;
+  nom: string;
+  capacite: number;
+  centre: Partial<Centre>;
+  specialite: Partial<Specialite>;
+}
+
 export interface ReportData {
   type?: string;
   generatedAt?: string;

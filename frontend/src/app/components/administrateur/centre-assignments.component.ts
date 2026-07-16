@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
-import { Candidature, Centre } from '../../models/models';
+import { Candidature, Centre, Specialite } from '../../models/models';
 
 interface AssignmentView {
   candidature: Candidature;
@@ -20,8 +20,8 @@ interface AssignmentView {
       <div class="hero-card">
         <div>
           <p class="eyebrow">Affectation automatique</p>
-          <h2>Gestion des candidats par centre et par salle</h2>
-          <p>Visualisez les candidats déjà affectés à leur centre après validation, puis modifiez la salle manuellement si nécessaire.</p>
+          <h2>Affectation par centre, spécialité et salle</h2>
+          <p>Sélectionnez un centre, puis une spécialité, pour traiter uniquement les candidats validés concernés.</p>
         </div>
         <div class="hero-pill">{{ centres.length }} centres</div>
       </div>
@@ -29,9 +29,16 @@ interface AssignmentView {
       <div class="filter-row">
         <label class="field">
           <span>Centre</span>
-          <select [(ngModel)]="selectedCentreId" (change)="loadAssignments()">
+          <select [(ngModel)]="selectedCentreId" (change)="onCentreChange()">
             <option [ngValue]="undefined">Sélectionner un centre</option>
             <option *ngFor="let centre of centres" [ngValue]="centre.id">{{ centre.nom }} · {{ centre.ville }}</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Spécialité</span>
+          <select [(ngModel)]="selectedSpecialiteId" (change)="onSpecialiteChange()" [disabled]="!selectedCentreId || specialites.length === 0">
+            <option [ngValue]="undefined">Sélectionner une spécialité</option>
+            <option *ngFor="let specialite of specialites" [ngValue]="specialite.id">{{ specialite.nom }}</option>
           </select>
         </label>
       </div>
@@ -44,12 +51,16 @@ interface AssignmentView {
         <p class="empty-state">Chargement des affectations...</p>
       </div>
 
-      <div class="panel" *ngIf="selectedCentreId && !loading && assignments.length === 0">
-        <p class="empty-state">Aucun candidat n’est encore affecté à ce centre.</p>
+      <div class="panel" *ngIf="selectedCentreId && !loading && !selectedSpecialiteId">
+        <p class="empty-state">Choisissez une spécialité pour afficher les candidatures validées et leurs salles.</p>
       </div>
 
-      <div class="assignment-list" *ngIf="selectedCentreId && !loading && assignments.length > 0">
-        <article class="assignment-card" *ngFor="let item of assignments">
+      <div class="panel" *ngIf="selectedCentreId && selectedSpecialiteId && !loading && visibleAssignments.length === 0">
+        <p class="empty-state">Aucun candidat validé pour cette spécialité dans ce centre.</p>
+      </div>
+
+      <div class="assignment-list" *ngIf="selectedCentreId && selectedSpecialiteId && !loading && visibleAssignments.length > 0">
+        <article class="assignment-card" *ngFor="let item of visibleAssignments">
           <div class="candidate-info">
             <h3>{{ item.candidature.candidat.prenom }} {{ item.candidature.candidat.nom }}</h3>
             <p><strong>CIN :</strong> {{ item.candidature.candidat.cin }}</p>
@@ -59,13 +70,14 @@ interface AssignmentView {
 
           <div class="room-block">
             <label class="field">
-              <span>Salle actuelle</span>
+              <span>Salle de la spécialité</span>
               <select [(ngModel)]="item.selectedSalleId" (change)="changeSalle(item)">
                 <option [ngValue]="undefined">Aucune salle</option>
                 <option *ngFor="let salle of item.salleOptions" [ngValue]="salle.id">{{ salle.label }}</option>
               </select>
             </label>
             <p class="helper">{{ item.salleLabel }}</p>
+            <p class="helper warning" *ngIf="item.salleOptions.length === 0">Aucune salle disponible pour cette spécialité.</p>
           </div>
         </article>
       </div>
@@ -183,8 +195,10 @@ interface AssignmentView {
 })
 export class CentreAssignmentsComponent implements OnInit {
   centres: Centre[] = [];
+  specialites: Specialite[] = [];
   assignments: AssignmentView[] = [];
   selectedCentreId?: number;
+  selectedSpecialiteId?: number;
   loading = false;
   saving = false;
 
@@ -219,8 +233,6 @@ export class CentreAssignmentsComponent implements OnInit {
         const salles = Array.isArray(payload.salles) ? payload.salles : [];
         const unassigned = Array.isArray(payload.unassignedCandidatures) ? payload.unassignedCandidatures : [];
 
-        const salleOptions = salles.map((salle: any) => ({ id: salle.salle?.id, label: salle.salle?.nom || salle.salle?.libelle || `Salle ${salle.salle?.id}` }));
-
         const assignedFromSalles: AssignmentView[] = [];
         salles.forEach((salleEntry: any) => {
           const salle = salleEntry.salle || {};
@@ -229,7 +241,7 @@ export class CentreAssignmentsComponent implements OnInit {
             assignedFromSalles.push({
               candidature,
               salleLabel: `Salle actuelle : ${salle.nom || salle.libelle || `Salle ${salle.id}`}`,
-              salleOptions,
+              salleOptions: this.roomOptionsForSpecialite(salles, candidature),
               selectedSalleId: salle.id
             });
           });
@@ -238,11 +250,17 @@ export class CentreAssignmentsComponent implements OnInit {
         const unassignedAssignments = unassigned.map((candidature: any) => ({
           candidature,
           salleLabel: 'Aucune salle assignée',
-          salleOptions,
+          salleOptions: this.roomOptionsForSpecialite(salles, candidature),
           selectedSalleId: undefined
         } as AssignmentView));
 
         this.assignments = [...assignedFromSalles, ...unassignedAssignments];
+        this.specialites = Array.from(new Map(
+          this.assignments
+            .map(item => item.candidature.specialite)
+            .filter((specialite): specialite is Specialite => !!specialite?.id)
+            .map(specialite => [specialite.id!, specialite])
+        ).values());
         this.loading = false;
       },
       error: () => {
@@ -266,5 +284,36 @@ export class CentreAssignmentsComponent implements OnInit {
         this.saving = false;
       }
     });
+  }
+
+  get visibleAssignments(): AssignmentView[] {
+    if (!this.selectedSpecialiteId) return [];
+    return this.assignments.filter(item => item.candidature.specialite?.id === this.selectedSpecialiteId);
+  }
+
+  onCentreChange(): void {
+    this.selectedSpecialiteId = undefined;
+    this.specialites = [];
+    this.loadAssignments();
+  }
+
+  onSpecialiteChange(): void {
+    // Filtering is performed locally because all validated candidates for the selected centre are already loaded.
+  }
+
+  private roomOptionsForSpecialite(salles: any[], candidature: Candidature): Array<{ id?: number; label: string }> {
+    const specialiteId = candidature.specialite?.id;
+    return salles
+      .filter((entry: any) => {
+        const salle = entry.salle || {};
+        const salleSpecialiteId = salle.specialite?.id;
+        const isUnconfiguredAndEmpty = !salleSpecialiteId && !(entry.candidatures || []).length;
+        return salleSpecialiteId === specialiteId || isUnconfiguredAndEmpty;
+      })
+      .map((entry: any) => {
+        const salle = entry.salle || {};
+        const label = salle.nom || salle.libelle || `Salle ${salle.id}`;
+        return { id: salle.id, label: `${label} · ${candidature.specialite?.nom || 'Spécialité'}` };
+      });
   }
 }

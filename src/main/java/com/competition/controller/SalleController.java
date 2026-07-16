@@ -60,7 +60,9 @@ public class SalleController {
         List<SalleWithCandidatesResponse> sallesWithCandidates = new ArrayList<>();
 
         for (Salle salle : salles) {
-            List<Candidature> candidatures = candidatureRepository.findBySalleId(salle.getId());
+            List<Candidature> candidatures = candidatureRepository.findBySalleId(salle.getId()).stream()
+                    .filter(candidature -> candidature.getStatut() == StatutCandidature.VALIDEE)
+                    .toList();
             sallesWithCandidates.add(SalleWithCandidatesResponse.builder()
                     .salle(salle)
                     .candidatures(candidatures)

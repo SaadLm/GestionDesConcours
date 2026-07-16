@@ -2678,9 +2678,9 @@ The system has been significantly updated to improve how specialities are alloca
    - Builds `CentreSpecialite` entity with found entities before saving
 
 3. **Backend - Updated Public Controller (`PublicController.java`):**
-   - Modified `getConcoursOptions()` to generate options based on centre-specialite allocations
-   - For each open concours, it finds all centre-specialite allocations for that centre
-   - Creates one registration option per allocation (concours + centre + speciality)
+   - Modified `getConcoursOptions()` to return one option per open concours
+   - Uses the centre and speciality selected on the concours itself
+   - Uses the matching centre-specialite allocation only to display the available places
 
 4. **Frontend - Updated API Service (`api.service.ts`):**
    - Changed `createCentreSpecialite()` to send simple DTO format: `{ centreId, specialiteId, nombrePlaces }`
@@ -2706,7 +2706,7 @@ The system has been significantly updated to improve how specialities are alloca
 
 **Benefits:**
 - **Better Capacity Management**: Each centre can have multiple specialities with different capacity allocations
-- **Flexible Registration**: A single concours can offer multiple speciality options at the same centre
+- **Clear Registration Scope**: Each concours is launched for one selected speciality at one selected centre
 - **Centralized Management**: All speciality allocations are managed in one place (centres management)
 - **Clear Capacity Tracking**: Places are explicitly allocated per centre-speciality combination
 - **Scalable Architecture**: Easy to add more allocation logic in the future
@@ -2740,8 +2740,8 @@ The system has been significantly updated to improve how specialities are alloca
 - However, to use the new allocation system, you need to create centre-specialite allocations
 
 **For Frontend:**
-- The inscription component already uses `getConcoursOptions()` so it will automatically work with the new logic
-- No changes needed to the registration form
+- The inscription component uses `getConcoursOptions()` and displays one card per concours
+- Each concours must have a centre and speciality selected before it can be displayed publicly
 
 **For Backend:**
 - The old API format for creating allocations is no longer supported
@@ -2750,6 +2750,58 @@ The system has been significantly updated to improve how specialities are alloca
 ### Summary
 
 The centre-specialite allocation system has been transformed from a secondary capacity tracking mechanism to the primary driver of registration options. This provides better flexibility, clearer capacity management, and a more intuitive admin interface for managing what specialities are offered at each centre.
+
+---
+
+## Recent Changes - Registration Documents, Candidate Review, and Theme
+
+### PDF document submission
+
+The public registration form is now a four-step process. In step 4, candidates must upload the following PDF files (maximum 5 MB each):
+
+- Copy of CIN
+- Curriculum Vitae
+- Diplomas and attestations
+
+The files are submitted with the candidature through `POST /api/v1/public/postuler-avec-documents` using multipart form data. They are saved in the backend `uploads` directory, while their metadata (original filename, stored filename, type, and candidature) is stored in the `documents` table. The configured request limit is 16 MB to support the three required files.
+
+The former email-notification checkbox and fifth registration step were removed. The terms-and-privacy acceptance checkbox is now at the bottom of step 4.
+
+### Candidate document review
+
+The competition-management screen now loads candidates only for the selected concours. The frontend sends `concoursId`, and `GET /api/v1/manager/candidatures` now applies that filter on the backend.
+
+Candidate rows are compact by default. Administrators and global managers can:
+
+- Expand a candidate with **Détails** to review personal and academic information.
+- Open submitted PDFs using the CIN, CV, and DIPLOME document buttons.
+
+Documents are served through the protected endpoint:
+
+`GET /api/v1/manager/candidatures/{candidatureId}/documents/{documentId}`
+
+Access to the file-viewing endpoint is restricted to `ADMIN` and `GESTIONNAIRE_GLOBAL` roles.
+
+### Room management and assignment
+
+Administrators and global managers now have a **Salles** supervision page. It supports creating, editing, filtering, and deleting exam rooms. Each room must be linked to:
+
+- One centre
+- One speciality already allocated to that centre
+- Its capacity
+
+The room API (`/api/v1/admin/salles`) is available to both `ADMIN` and `GESTIONNAIRE_GLOBAL`. The candidate-assignment page then filters by centre followed by speciality, shows only validated candidates, displays their automatic room assignment, and offers only rooms compatible with their speciality for manual reassignment.
+
+### Institutional visual theme
+
+The Angular interface now follows an Emploi-Public Morocco-inspired government portal theme:
+
+- Deep navy (`#072F75`) for the sidebar, structure, and headings.
+- Gold (`#F2AF29`) for primary calls to action.
+- Poppins/Open Sans typography, high-contrast text, white elevated cards, and rounded form controls.
+- Responsive spacing and keyboard focus states across shared controls.
+
+The shared implementation is located in `frontend/src/styles.css` and `frontend/src/app/app.component.css`.
 
 ## Summary
 
@@ -2764,6 +2816,8 @@ This comprehensive documentation covers:
 ✅ **User Roles & Permissions**: Matrix showing access levels  
 ✅ **Authentication & Security**: JWT implementation, session validation, CORS  
 ✅ **Core Features**: Registration, Tracking, Validation, Allocation, Reporting  
+✅ **Document Workflow**: Required PDF upload, protected storage, and candidate-file review  
+✅ **Visual System**: Institutional Emploi-Public-inspired responsive theme  
 ✅ **Component Details**: Each major component explained with code samples  
 ✅ **Data Flow**: Complete request/response cycles with examples  
 ✅ **Setup Instructions**: Backend and frontend installation & running
