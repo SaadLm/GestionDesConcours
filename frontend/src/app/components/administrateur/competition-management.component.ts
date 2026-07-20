@@ -901,19 +901,29 @@ export class CompetitionManagementComponent implements OnInit {
   }
 
   loadCentres(): void {
-    const request = this.auth.isLocalManager() ? this.api.getMyCentre() : this.api.getCentres();
-    request.subscribe({
-      next: (res) => {
-        this.centres = this.auth.isLocalManager() ? [res.data as Centre] : (res.data as Centre[] || []);
-        if (this.auth.isLocalManager() && this.centres[0]) {
-          this.formConcours.centre = this.centres[0];
-          this.loadSpecialitesForCentre(this.centres[0].id!);
+    if (this.auth.isLocalManager()) {
+      this.api.getMyCentre().subscribe({
+        next: (res: any) => {
+          this.centres = [res.data as Centre];
+          if (this.centres[0]) {
+            this.formConcours.centre = this.centres[0];
+            this.loadSpecialitesForCentre(this.centres[0].id!);
+          }
+        },
+        error: () => {
+          // centre list failed to load; form can still function without it
         }
-      },
-      error: () => {
-        // centre list failed to load; form can still function without it
-      }
-    });
+      });
+    } else {
+      this.api.getCentres().subscribe({
+        next: (res: any) => {
+          this.centres = res.data as Centre[] || [];
+        },
+        error: () => {
+          // centre list failed to load; form can still function without it
+        }
+      });
+    }
   }
 
   loadSpecialitesForCentre(centreId: number): void {
