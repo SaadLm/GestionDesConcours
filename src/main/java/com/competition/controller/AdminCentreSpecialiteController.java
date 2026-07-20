@@ -8,22 +8,28 @@ import com.competition.model.Specialite;
 import com.competition.repository.CentreRepository;
 import com.competition.repository.CentreSpecialiteRepository;
 import com.competition.repository.SpecialiteRepository;
+import com.competition.repository.UserRepository;
+import com.competition.model.User;
+import com.competition.model.Role;
+import com.competition.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/v1/admin/centre-specialites")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_GLOBAL')")
+@PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_GLOBAL', 'GESTIONNAIRE_LOCAL')")
 public class AdminCentreSpecialiteController {
 
     private final CentreSpecialiteRepository centreSpecialiteRepository;
     private final CentreRepository centreRepository;
     private final SpecialiteRepository specialiteRepository;
+    private final UserRepository userRepository;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<CentreSpecialite>>> getAllCentreSpecialites() {
@@ -37,7 +43,13 @@ public class AdminCentreSpecialiteController {
 
     @GetMapping("/centre/{centreId}")
     public ResponseEntity<ApiResponse<List<CentreSpecialite>>> getSpecialitesByCenter(
-            @PathVariable Long centreId) {
+            @PathVariable Long centreId, Principal principal) {
+        User user = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new BusinessException("Utilisateur non connecté."));
+        if (user.getRole() == Role.GESTIONNAIRE_LOCAL
+                && (user.getCentre() == null || !centreId.equals(user.getCentre().getId()))) {
+            throw new BusinessException("Accès refusé. Ce centre n'est pas associé à votre compte.");
+        }
         List<CentreSpecialite> specialites = centreSpecialiteRepository.findByCentreId(centreId);
         return ResponseEntity.ok(ApiResponse.<List<CentreSpecialite>>builder()
                 .success(true)

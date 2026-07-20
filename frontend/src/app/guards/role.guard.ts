@@ -15,7 +15,7 @@ export const adminOnlyGuard: CanActivateFn = () => {
 export const supervisionGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  if (auth.isAdmin() || auth.isGlobalManager()) {
+  if (auth.isAdmin() || auth.isGlobalManager() || auth.isLocalManager()) {
     return true;
   }
   router.navigate(['/auth']);

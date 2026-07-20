@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
-import { UserBase } from '../../models/models';
+import { Centre, UserBase } from '../../models/models';
 
 interface RolePermission {
   role: string;
@@ -156,6 +156,14 @@ interface RolePermission {
                 <span class="option-description">{{ getRoleDescription(role) }}</span>
               </span>
             </label>
+          </div>
+
+          <div class="centre-selection" *ngIf="roleChangeDialog.selectedRole === 'Gestionnaire local'">
+            <label>Centre de rattachement *</label>
+            <select [(ngModel)]="roleChangeDialog.selectedCentreId">
+              <option [ngValue]="undefined">Sélectionner un centre</option>
+              <option *ngFor="let centre of centres" [ngValue]="centre.id">{{ centre.nom }} · {{ centre.ville }}</option>
+            </select>
           </div>
 
           <div class="modal-actions">
@@ -454,6 +462,7 @@ interface RolePermission {
       gap: 1rem;
       justify-content: flex-end;
     }
+    .centre-selection { margin: 0 0 1.5rem; }
     .alert-message {
       margin-top: 1rem;
       padding: 1rem;
@@ -515,6 +524,7 @@ interface RolePermission {
 })
 export class RolesAccessComponent implements OnInit {
   users: UserBase[] = [];
+  centres: Centre[] = [];
   loadingUsers = false;
   savingSettings = false;
   expandedRole: string | null = null;
@@ -522,7 +532,8 @@ export class RolesAccessComponent implements OnInit {
   roleChangeDialog = {
     open: false,
     user: null as UserBase | null,
-    selectedRole: ''
+    selectedRole: '',
+    selectedCentreId: undefined as number | undefined
   };
 
   availableRoles = [
@@ -591,6 +602,11 @@ export class RolesAccessComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUsers();
+    this.loadCentres();
+  }
+
+  loadCentres(): void {
+    this.api.getAdminCentres().subscribe({ next: res => this.centres = res.data || [] });
   }
 
   loadUsers(): void {
@@ -628,7 +644,8 @@ export class RolesAccessComponent implements OnInit {
     this.roleChangeDialog = {
       open: true,
       user: user,
-      selectedRole: user.role || ''
+      selectedRole: this.roleLabel(user.role || ''),
+      selectedCentreId: user.centre?.id
     };
   }
 
@@ -636,7 +653,8 @@ export class RolesAccessComponent implements OnInit {
     this.roleChangeDialog = {
       open: false,
       user: null,
-      selectedRole: ''
+      selectedRole: '',
+      selectedCentreId: undefined
     };
   }
 
@@ -644,12 +662,17 @@ export class RolesAccessComponent implements OnInit {
     if (!this.roleChangeDialog.user || !this.roleChangeDialog.selectedRole) return;
 
     const user = this.roleChangeDialog.user;
+    if (this.roleChangeDialog.selectedRole === 'Gestionnaire local' && !this.roleChangeDialog.selectedCentreId) {
+      this.settingsMessage = 'Un gestionnaire local doit être rattaché à un centre.';
+      this.settingsMessageType = 'error';
+      return;
+    }
     const payload: any = {
       nom: user.nom,
       prenom: (user as any).prenom || '',
       email: user.email,
       role: this.mapRoleToEnum(this.roleChangeDialog.selectedRole),
-      centreId: (user as any).centreId
+      centreId: this.roleChangeDialog.selectedCentreId
     };
 
     this.savingSettings = true;
@@ -676,6 +699,13 @@ export class RolesAccessComponent implements OnInit {
     if (label.includes('global')) return 'GESTIONNAIRE_GLOBAL';
     if (label.includes('administr')) return 'ADMIN';
     return roleLabel;
+  }
+
+  private roleLabel(role: string): string {
+    if (role === 'GESTIONNAIRE_LOCAL') return 'Gestionnaire local';
+    if (role === 'GESTIONNAIRE_GLOBAL') return 'Gestionnaire global';
+    if (role === 'ADMIN') return 'Administrateur';
+    return role;
   }
 
   saveAccessSettings(): void {

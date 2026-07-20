@@ -59,6 +59,7 @@ public class UserService {
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .role(dto.getRole())
                 .centre(centre)
+                .actif(true)
                 .build();
 
         return userRepository.save(user);
@@ -101,6 +102,8 @@ public class UserService {
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Utilisateur non trouvé avec l'id : " + id));
-        userRepository.delete(user);
+        user.setActif(false);
+        user.setActiveToken(null);
+        userRepository.save(user);
     }
 }

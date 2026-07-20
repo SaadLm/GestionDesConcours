@@ -15,6 +15,9 @@ public interface CandidatureRepository extends JpaRepository<Candidature, Long> 
 
     @Query("select distinct c from Candidature c join fetch c.candidat cand left join fetch cand.diplomes where c.concours.id = :concoursId")
     List<Candidature> findByConcoursIdWithCandidateDiplomes(@Param("concoursId") Long concoursId);
+
+    @Query("select distinct c from Candidature c join fetch c.candidat cand left join fetch cand.diplomes where c.centre.id = :centreId and c.concours.id = :concoursId")
+    List<Candidature> findByCentreIdAndConcoursIdWithCandidateDiplomes(@Param("centreId") Long centreId, @Param("concoursId") Long concoursId);
     
     long countBySalleId(Long salleId);
     List<Candidature> findBySalleId(Long salleId);

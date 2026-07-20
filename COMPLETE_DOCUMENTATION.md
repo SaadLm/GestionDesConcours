@@ -2792,6 +2792,18 @@ Administrators and global managers now have a **Salles** supervision page. It su
 
 The room API (`/api/v1/admin/salles`) is available to both `ADMIN` and `GESTIONNAIRE_GLOBAL`. The candidate-assignment page then filters by centre followed by speciality, shows only validated candidates, displays their automatic room assignment, and offers only rooms compatible with their speciality for manual reassignment.
 
+### User accounts and local-manager scope
+
+The administrator-only **Comptes Utilisateurs** page (`/administrateur/users`) manages the three roles:
+
+- `ADMIN` / Administrateur
+- `GESTIONNAIRE_GLOBAL` / Gestionnaire global
+- `GESTIONNAIRE_LOCAL` / Gestionnaire local
+
+Creating or editing a local manager requires selecting a centre. Deleting a user is a soft delete: the account is marked inactive (`actif = false`), its active token is cleared, and it can no longer authenticate. The account record remains visible to administrators for audit purposes.
+
+Local-manager API access is enforced server-side. A local manager can list, validate, or reject only candidatures from the centre attached to their account. The local dashboard retrieves and displays that linked centre rather than a fixed centre, and competition creation remains restricted to administrators and global managers.
+
 ### Institutional visual theme
 
 The Angular interface now follows an Emploi-Public Morocco-inspired government portal theme:

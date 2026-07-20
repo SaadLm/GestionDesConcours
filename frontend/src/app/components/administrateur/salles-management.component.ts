@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { Centre, Salle, Specialite } from '../../models/models';
 
 @Component({
@@ -100,7 +101,7 @@ export class SallesManagementComponent implements OnInit {
   saving = false;
   formError = '';
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private auth: AuthService) {}
 
   ngOnInit(): void { this.loadData(); }
 
@@ -112,8 +113,13 @@ export class SallesManagementComponent implements OnInit {
 
   loadData(): void {
     this.loading = true;
-    forkJoin({ centres: this.api.getAdminCentres(), specialites: this.api.getAdminSpecialites(), salles: this.api.getSalles() }).subscribe({
-      next: ({ centres, specialites, salles }) => { this.centres = centres.data || []; this.specialites = specialites.data || []; this.salles = salles.data || []; this.filterSpecialites = this.specialites; this.loading = false; },
+    const centresRequest = this.auth.isLocalManager() ? this.api.getMyCentre() : this.api.getAdminCentres();
+    forkJoin({ centres: centresRequest, specialites: this.api.getSpecialites(), salles: this.api.getSalles() }).subscribe({
+      next: ({ centres, specialites, salles }) => {
+        const centreData = centres.data as Centre | Centre[];
+        this.centres = Array.isArray(centreData) ? centreData : [centreData];
+        this.specialites = specialites.data || []; this.salles = salles.data || []; this.filterSpecialites = this.specialites; this.loading = false;
+      },
       error: () => { this.loading = false; }
     });
   }

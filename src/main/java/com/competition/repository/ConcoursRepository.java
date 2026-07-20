@@ -4,4 +4,5 @@ import com.competition.model.Concours;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ConcoursRepository extends JpaRepository<Concours, Long> {
+    java.util.List<Concours> findByCentreId(Long centreId);
 }

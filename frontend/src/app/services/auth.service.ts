@@ -22,18 +22,26 @@ export class AuthService {
     const token = localStorage.getItem('auth_token');
     const email = localStorage.getItem('auth_email');
     if (token && email) {
-      const profile = this.decodeRoleFromToken(token) || ('Gestionnaire global' as RoleType);
-      this.userSubject.next({ profile, email });
+      const profile = this.decodeRoleFromToken(token);
+      if (profile) {
+        this.userSubject.next({ profile, email });
+      } else {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_email');
+      }
     }
   }
 
   login(email: string, password: string): Observable<UserSession> {
-    return this.http.post<{ token: string }>(`${this.baseUrl}/auth/login`, { email, password }).pipe(
+    return this.http.post<{ token: string; role?: string }>(`${this.baseUrl}/auth/login`, { email, password }).pipe(
       map((res) => {
         const token = res.token;
+        const profile = this.roleFromValue(res.role) || this.decodeRoleFromToken(token);
+        if (!profile) {
+          throw new Error('Le rôle de l’utilisateur est absent de la réponse de connexion.');
+        }
         localStorage.setItem('auth_token', token);
         localStorage.setItem('auth_email', email);
-        const profile = this.decodeRoleFromToken(token) || ('Gestionnaire global' as RoleType);
         const session: UserSession = { profile, email };
         this.userSubject.next(session);
         return session;
@@ -90,12 +98,18 @@ export class AuthService {
       const roleClaim = payload.role || payload.roles || payload.authorities || payload.authority;
       if (!roleClaim) return undefined;
       const roleStr = Array.isArray(roleClaim) ? roleClaim[0] : roleClaim;
-      if (roleStr.includes('LOCAL')) return 'Gestionnaire local';
-      if (roleStr.includes('GLOBAL')) return 'Gestionnaire global';
-      if (roleStr.includes('ADMIN')) return 'Administrateur';
-      return undefined;
+      return this.roleFromValue(String(roleStr));
     } catch (e) {
       return undefined;
     }
+  }
+
+  private roleFromValue(role?: string): RoleType | undefined {
+    if (!role) return undefined;
+    const normalizedRole = role.toUpperCase();
+    if (normalizedRole.includes('GESTIONNAIRE_LOCAL') || normalizedRole.includes('LOCAL')) return 'Gestionnaire local';
+    if (normalizedRole.includes('GESTIONNAIRE_GLOBAL') || normalizedRole.includes('GLOBAL')) return 'Gestionnaire global';
+    if (normalizedRole.includes('ADMIN')) return 'Administrateur';
+    return undefined;
   }
 }

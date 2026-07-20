@@ -23,7 +23,19 @@ export const routes: Routes = [
   { path: 'suivi', component: TrackingComponent },
   { path: 'suivi/:numero', component: TrackingComponent },
   { path: 'auth', component: AuthComponent },
-  { path: 'gestionnaire-local', component: GestionnaireLocalComponent },
+  {
+    path: 'gestionnaire-local',
+    component: SupervisionLayoutComponent,
+    canActivate: [supervisionGuard],
+    data: { layoutRole: 'local' },
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: GestionnaireLocalComponent },
+      { path: 'competitions', component: CompetitionManagementComponent },
+      { path: 'salles', component: SallesManagementComponent },
+      { path: 'centre-assignments', component: CentreAssignmentsComponent }
+    ]
+  },
   {
     path: 'gestionnaire-global',
     component: SupervisionLayoutComponent,

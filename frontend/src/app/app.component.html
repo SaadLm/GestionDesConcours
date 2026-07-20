@@ -14,6 +14,7 @@
         <a *ngIf="user.profile === 'Gestionnaire local'" routerLink="/gestionnaire-local" routerLinkActive="active">Supervision</a>
         <a *ngIf="user.profile === 'Gestionnaire global'" routerLink="/gestionnaire-global" routerLinkActive="active">Supervision</a>
         <a *ngIf="user.profile === 'Administrateur'" routerLink="/administrateur" routerLinkActive="active">Supervision</a>
+        <a *ngIf="user.profile === 'Administrateur'" routerLink="/administrateur/users" routerLinkActive="active">Utilisateurs</a>
       </nav>
       <button class="btn btn-secondary logout-btn" (click)="logout()">Déconnexion</button>
     </ng-container>

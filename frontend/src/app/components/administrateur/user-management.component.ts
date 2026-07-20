@@ -32,6 +32,7 @@ import { UserBase, Centre } from '../../models/models';
               <th>Email</th>
               <th>Rôle</th>
               <th>Centre</th>
+              <th>État</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -51,7 +52,14 @@ import { UserBase, Centre } from '../../models/models';
                   </select>
                 </ng-container>
               </td>
-              <td>{{ user.centre?.nom || '-' }}</td>
+              <td>
+                <span *ngIf="editingUser?.id !== user.id">{{ user.centre?.nom || '-' }}</span>
+                <select *ngIf="editingUser?.id === user.id && editingUser as edit" [(ngModel)]="edit.centreId" [disabled]="edit.role !== 'Gestionnaire local'">
+                  <option [ngValue]="undefined">-- aucun --</option>
+                  <option *ngFor="let centre of centres" [ngValue]="centre.id">{{ centre.nom }} · {{ centre.ville }}</option>
+                </select>
+              </td>
+              <td><span class="state-badge" [class.inactive]="user.actif === false">{{ user.actif === false ? 'Inactif' : 'Actif' }}</span></td>
               <td class="actions-cell">
                 <button 
                   *ngIf="editingUser?.id !== user.id"
@@ -80,7 +88,7 @@ import { UserBase, Centre } from '../../models/models';
                   (click)="deleteUser(user.id!)"
                   [disabled]="deletingUserId === user.id"
                   title="Supprimer">
-                  🗑️ Supprimer
+                  🚫 Désactiver
                 </button>
               </td>
             </tr>
@@ -155,7 +163,8 @@ import { UserBase, Centre } from '../../models/models';
                 id="centre"
                 [(ngModel)]="newUser.centreId"
                 name="centreId"
-                class="form-control">
+                class="form-control"
+                [disabled]="newUser.role !== 'Gestionnaire local'">
                 <option [ngValue]="undefined">-- aucun --</option>
                 <option *ngFor="let c of centres" [ngValue]="c.id">{{ c.nom }} - {{ c.ville }}</option>
               </select>
@@ -250,6 +259,8 @@ import { UserBase, Centre } from '../../models/models';
       border: 1px solid var(--border);
       border-radius: 4px;
     }
+    .state-badge { color: var(--success); font-weight: 700; }
+    .state-badge.inactive { color: var(--error); }
     .actions-cell {
       display: flex;
       gap: 0.5rem;
@@ -423,7 +434,10 @@ export class UserManagementComponent implements OnInit {
 
   startEdit(user: UserBase): void {
     this.editingUserOriginal = JSON.parse(JSON.stringify(user));
-    this.editingUser = JSON.parse(JSON.stringify(user));
+    const editingUser = JSON.parse(JSON.stringify(user)) as Partial<UserBase & { password?: string; centreId?: number }>;
+    editingUser.role = this.roleLabel(user.role as string) as any;
+    editingUser.centreId = user.centre?.id;
+    this.editingUser = editingUser;
   }
 
   cancelEdit(): void {
@@ -434,6 +448,11 @@ export class UserManagementComponent implements OnInit {
   saveEditedUser(): void {
     if (!this.editingUser || !this.editingUser.id) return;
 
+    if (this.editingUser.role === 'Gestionnaire local' && !this.editingUser.centreId) {
+      this.createMessage = 'Un gestionnaire local doit être rattaché à un centre.';
+      this.createMessageType = 'error';
+      return;
+    }
     const payload: any = {
       nom: this.editingUser.nom,
       prenom: (this.editingUser as any).prenom || '',
@@ -464,13 +483,13 @@ export class UserManagementComponent implements OnInit {
     const user = this.users.find(u => u.id === userId);
     if (!user) return;
 
-    const confirmed = window.confirm(`Êtes-vous sûr de vouloir supprimer ${user.nom}?`);
+    const confirmed = window.confirm(`Désactiver le compte de ${user.nom} ? Il ne pourra plus se connecter.`);
     if (!confirmed) return;
 
     this.deletingUserId = userId;
     this.api.deleteUser(userId).subscribe({
       next: () => {
-        this.createMessage = `${user.nom} a été supprimé.`;
+        this.createMessage = `${user.nom} a été désactivé.`;
         this.createMessageType = 'success';
         this.deletingUserId = null;
         this.loadUsers();
@@ -519,8 +538,15 @@ export class UserManagementComponent implements OnInit {
     const label = (role as string).toLowerCase();
     if (label.includes('local')) return 'local';
     if (label.includes('global')) return 'global';
-    if (label.includes('administr')) return 'admin';
+    if (label.includes('administr') || label === 'admin') return 'admin';
     return '';
+  }
+
+  private roleLabel(role: string): string {
+    if (role === 'GESTIONNAIRE_LOCAL') return 'Gestionnaire local';
+    if (role === 'GESTIONNAIRE_GLOBAL') return 'Gestionnaire global';
+    if (role === 'ADMIN') return 'Administrateur';
+    return role;
   }
 
   createUser(): void {

@@ -117,6 +117,13 @@ export class SupervisionLayoutComponent implements OnInit {
     { label: 'Rapports & Statistiques', route: 'reports', icon: '📊', description: 'Génération de rapports et statistiques' }
   ];
 
+  private readonly localTabs: SupervisionTab[] = [
+    { label: 'Tableau de bord', route: 'dashboard', icon: '🏛️', description: 'Candidatures de votre centre' },
+    { label: 'Concours', route: 'competitions', icon: '📋', description: 'Gérer les concours de votre centre' },
+    { label: 'Salles', route: 'salles', icon: '🚪', description: 'Gérer les salles de votre centre' },
+    { label: 'Affectations salles', route: 'centre-assignments', icon: '🪑', description: 'Affecter les candidats de votre centre' }
+  ];
+
   visibleTabs: SupervisionTab[] = [];
   pageTitle = 'Supervision';
   pageDescription = '';
@@ -124,12 +131,16 @@ export class SupervisionLayoutComponent implements OnInit {
   constructor(private auth: AuthService, private route: ActivatedRoute) {}
 
   ngOnInit(): void {
-    const layoutRole = this.route.snapshot.data['layoutRole'] as 'admin' | 'global' | undefined;
+    const layoutRole = this.route.snapshot.data['layoutRole'] as 'admin' | 'global' | 'local' | undefined;
 
     if (layoutRole === 'admin' || this.auth.isAdmin()) {
       this.visibleTabs = this.adminTabs;
       this.pageTitle = 'Administration & Supervision';
       this.pageDescription = 'Gestion des comptes, paramètres plateforme et supervision globale des concours.';
+    } else if (layoutRole === 'local' || this.auth.isLocalManager()) {
+      this.visibleTabs = this.localTabs;
+      this.pageTitle = 'Gestion locale';
+      this.pageDescription = 'Gérez les concours, salles et candidatures de votre centre uniquement.';
     } else {
       this.visibleTabs = this.globalTabs;
       this.pageTitle = 'Supervision Globale';

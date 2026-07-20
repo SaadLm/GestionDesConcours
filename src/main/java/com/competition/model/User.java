@@ -39,6 +39,10 @@ public class User {
     @Column(length = 1000)
     private String activeToken;
 
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean actif = true;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

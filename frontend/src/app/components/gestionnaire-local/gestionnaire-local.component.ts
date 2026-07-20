@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../services/api.service';
-import { Candidature, ApiResponse } from '../../models/models';
+import { Candidature, ApiResponse, Centre } from '../../models/models';
 
 @Component({
   selector: 'app-gestionnaire-local',
@@ -26,9 +26,9 @@ import { Candidature, ApiResponse } from '../../models/models';
         </div>
         <div class="glass-card summary-card">
           <h2>Centre</h2>
-          <p><strong>Centre Casablanca</strong></p>
-          <p>Spécialités gérées : Informatique, Gestion</p>
-          <p>Places restantes : 24</p>
+          <p><strong>{{ centre?.nom || 'Chargement du centre...' }}</strong></p>
+          <p *ngIf="centre">{{ centre.ville }}{{ centre.adresse ? ' · ' + centre.adresse : '' }}</p>
+          <p>Les candidatures et actions affichées sont limitées à ce centre.</p>
         </div>
       </div>
 
@@ -64,16 +64,6 @@ import { Candidature, ApiResponse } from '../../models/models';
         </table>
       </section>
 
-      <section class="places-card">
-        <h2>Places disponibles par spécialité</h2>
-        <div class="place-row" *ngFor="let place of places">
-          <div>
-            <strong>{{ place.specialite }}</strong>
-            <p>{{ place.description }}</p>
-          </div>
-          <div class="badge">{{ place.disponible }} places</div>
-        </div>
-      </section>
     </div>
   `,
   styles: [`
@@ -174,18 +164,19 @@ import { Candidature, ApiResponse } from '../../models/models';
 })
 export class GestionnaireLocalComponent {
   candidatures: Candidature[] = [];
-
-  places = [
-    { specialite: 'Informatique', description: 'Places disponibles pour le centre Casablanca.', disponible: 12 },
-    { specialite: 'Gestion', description: 'Places restantes pour le centre Casablanca.', disponible: 8 }
-  ];
+  centre?: Centre;
 
   loading = false;
 
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
+    this.loadCentre();
     this.loadCandidatures();
+  }
+
+  private loadCentre(): void {
+    this.api.getMyCentre().subscribe({ next: res => this.centre = res.data });
   }
 
   private loadCandidatures(): void {

@@ -746,7 +746,7 @@ export class CompetitionManagementComponent implements OnInit {
   constructor(private api: ApiService, private auth: AuthService) {}
 
   ngOnInit(): void {
-    this.canManage = this.auth.isAdmin() || this.auth.isGlobalManager();
+    this.canManage = this.auth.isAdmin() || this.auth.isGlobalManager() || this.auth.isLocalManager();
     this.loadConcours();
     this.loadCentres();
   }
@@ -901,9 +901,14 @@ export class CompetitionManagementComponent implements OnInit {
   }
 
   loadCentres(): void {
-    this.api.getCentres().subscribe({
+    const request = this.auth.isLocalManager() ? this.api.getMyCentre() : this.api.getCentres();
+    request.subscribe({
       next: (res) => {
-        this.centres = res.data || [];
+        this.centres = this.auth.isLocalManager() ? [res.data as Centre] : (res.data as Centre[] || []);
+        if (this.auth.isLocalManager() && this.centres[0]) {
+          this.formConcours.centre = this.centres[0];
+          this.loadSpecialitesForCentre(this.centres[0].id!);
+        }
       },
       error: () => {
         // centre list failed to load; form can still function without it

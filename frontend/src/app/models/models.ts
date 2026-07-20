@@ -132,6 +132,7 @@ export interface UserBase {
   role: RoleType;
   centreId?: number;
   centre?: Pick<Centre, 'id' | 'nom' | 'ville'>;
+  actif?: boolean;
 }
 
 export interface GestionnaireLocal extends UserBase {

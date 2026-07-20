@@ -61,6 +61,10 @@ export class ApiService {
     return this.http.get<ApiResponse<Candidature[]>>(`${this.baseUrl}/manager/candidatures`, { params });
   }
 
+  getMyCentre(): Observable<ApiResponse<Centre>> {
+    return this.http.get<ApiResponse<Centre>>(`${this.baseUrl}/manager/my-centre`);
+  }
+
   getCandidateDocument(candidatureId: number, documentId: number): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/manager/candidatures/${candidatureId}/documents/${documentId}`, {
       responseType: 'blob'
