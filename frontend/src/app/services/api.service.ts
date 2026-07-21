@@ -7,7 +7,9 @@ import { ApiResponse, Candidature, Centre, CentreSpecialiteAllocation, Concours,
   providedIn: 'root'
 })
 export class ApiService {
-  private baseUrl = 'http://localhost:8080/api/v1';
+  // private baseUrl = 'http://localhost:8080/api/v1';
+  // private baseUrl = 'http://gestiondesconcours-production.up.railway.app/api/v1';
+  private baseUrl = 'https://gestiondesconcours-production.up.railway.app/api/v1';
 
   constructor(private http: HttpClient) {}
 
@@ -72,6 +74,7 @@ export class ApiService {
   }
 
   validerCandidature(id: number): Observable<ApiResponse<void>> {
+    // console.log(this.baseUrl)
     return this.http.post<ApiResponse<void>>(`${this.baseUrl}/manager/candidatures/${id}/valider`, {});
   }
 
