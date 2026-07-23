@@ -118,10 +118,11 @@ export class SupervisionLayoutComponent implements OnInit {
   ];
 
   private readonly localTabs: SupervisionTab[] = [
-    { label: 'Tableau de bord', route: 'dashboard', icon: '🏛️', description: 'Candidatures de votre centre' },
     { label: 'Concours', route: 'competitions', icon: '📋', description: 'Gérer les concours de votre centre' },
+    { label: 'Spécialités', route: 'specialties', icon: '🎯', description: 'Spécialités allouées à votre centre' },
     { label: 'Salles', route: 'salles', icon: '🚪', description: 'Gérer les salles de votre centre' },
-    { label: 'Affectations salles', route: 'centre-assignments', icon: '🪑', description: 'Affecter les candidats de votre centre' }
+    { label: 'Affectations salles', route: 'centre-assignments', icon: '🪑', description: 'Affecter les candidats de votre centre' },
+    { label: 'Rapports & Statistiques', route: 'reports', icon: '📊', description: 'Statistiques de votre centre' }
   ];
 
   visibleTabs: SupervisionTab[] = [];

@@ -7,9 +7,8 @@ import { ApiResponse, Candidature, Centre, CentreSpecialiteAllocation, Concours,
   providedIn: 'root'
 })
 export class ApiService {
-  // private baseUrl = 'http://localhost:8080/api/v1';
-  // private baseUrl = 'http://gestiondesconcours-production.up.railway.app/api/v1';
-  private baseUrl = 'https://gestiondesconcours-production.up.railway.app/api/v1';
+  private baseUrl = 'http://localhost:8080/api/v1';
+  // private baseUrl = 'https://gestiondesconcours-production.up.railway.app/api/v1';
 
   constructor(private http: HttpClient) {}
 
@@ -94,6 +93,24 @@ export class ApiService {
     return this.http.put<ApiResponse<void>>(url, {});
   }
 
+  // Manager-specific salle endpoints
+  getManagerSalles(): Observable<ApiResponse<Salle[]>> {
+    return this.http.get<ApiResponse<Salle[]>>(`${this.baseUrl}/manager/salles`);
+  }
+
+  createManagerSalle(payload: Salle): Observable<ApiResponse<Salle>> {
+    return this.http.post<ApiResponse<Salle>>(`${this.baseUrl}/manager/salles`, payload);
+  }
+
+  updateManagerSalle(id: number, payload: Salle): Observable<ApiResponse<Salle>> {
+    return this.http.put<ApiResponse<Salle>>(`${this.baseUrl}/manager/salles/${id}`, payload);
+  }
+
+  deleteManagerSalle(id: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/manager/salles/${id}`);
+  }
+
+  // Admin salle endpoints
   getSalles(): Observable<ApiResponse<Salle[]>> {
     return this.http.get<ApiResponse<Salle[]>>(`${this.baseUrl}/admin/salles`);
   }
@@ -180,6 +197,29 @@ export class ApiService {
 
   deleteCentre(id: number): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/admin/centres/${id}`);
+  }
+
+  // Manager-specific specialty allocation endpoints
+  getManagerCentreSpecialites(): Observable<ApiResponse<CentreSpecialiteAllocation[]>> {
+    return this.http.get<ApiResponse<CentreSpecialiteAllocation[]>>(`${this.baseUrl}/manager/centre-specialites`);
+  }
+
+  createManagerCentreSpecialite(payload: { centreId: number; specialiteId: number; nombrePlaces: number }): Observable<ApiResponse<CentreSpecialiteAllocation>> {
+    return this.http.post<ApiResponse<CentreSpecialiteAllocation>>(`${this.baseUrl}/manager/centre-specialites`, {
+      centreId: payload.centreId,
+      specialiteId: payload.specialiteId,
+      nombrePlaces: payload.nombrePlaces
+    });
+  }
+
+  updateManagerCentreSpecialite(id: number, nombrePlaces: number): Observable<ApiResponse<CentreSpecialiteAllocation>> {
+    return this.http.put<ApiResponse<CentreSpecialiteAllocation>>(`${this.baseUrl}/manager/centre-specialites/${id}`, {
+      nombrePlaces
+    });
+  }
+
+  deleteManagerCentreSpecialite(id: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/manager/centre-specialites/${id}`);
   }
 
   // Admin specialty allocations

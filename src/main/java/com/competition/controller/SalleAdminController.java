@@ -35,7 +35,7 @@ public class SalleAdminController {
     public ResponseEntity<ApiResponse<List<Salle>>> getAllSalles(Principal principal) {
         User user = currentUser(principal);
         List<Salle> salles = user.getRole() == Role.GESTIONNAIRE_LOCAL
-                ? salleRepository.findByCentreId(localCentreId(user)) : salleRepository.findAll();
+                ? salleRepository.findByCentreIdWithCentreAndSpecialite(localCentreId(user)) : salleRepository.findAllWithCentreAndSpecialite();
         return ResponseEntity.ok(ApiResponse.<List<Salle>>builder()
                 .success(true)
                 .message("Liste des salles récupérée avec succès.")

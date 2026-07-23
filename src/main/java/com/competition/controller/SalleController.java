@@ -28,9 +28,19 @@ public class SalleController {
     private final CandidatureService candidatureService;
 
     @GetMapping("/centres")
-    @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_GLOBAL')")
-    public ResponseEntity<ApiResponse<List<Centre>>> getAllCentres() {
-        List<Centre> centres = centreRepository.findAll();
+    @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_GLOBAL', 'GESTIONNAIRE_LOCAL')")
+    public ResponseEntity<ApiResponse<List<Centre>>> getAllCentres(Principal principal) {
+        List<Centre> centres;
+        User currentUser = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new BusinessException("Utilisateur non connecté."));
+        if (currentUser.getRole() == Role.GESTIONNAIRE_LOCAL) {
+            if (currentUser.getCentre() == null) {
+                throw new BusinessException("Le gestionnaire local n'est associé à aucun centre.");
+            }
+            centres = java.util.Collections.singletonList(currentUser.getCentre());
+        } else {
+            centres = centreRepository.findAll();
+        }
         return ResponseEntity.ok(ApiResponse.<List<Centre>>builder()
                 .success(true)
                 .message("Liste de tous les centres récupérée avec succès.")

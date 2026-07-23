@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { Candidature, Centre, Specialite } from '../../models/models';
 
 interface AssignmentView {
@@ -27,7 +28,7 @@ interface AssignmentView {
       </div>
 
       <div class="filter-row">
-        <label class="field">
+        <label class="field" *ngIf="!isLocal">
           <span>Centre</span>
           <select [(ngModel)]="selectedCentreId" (change)="onCentreChange()">
             <option [ngValue]="undefined">Sélectionner un centre</option>
@@ -201,23 +202,37 @@ export class CentreAssignmentsComponent implements OnInit {
   selectedSpecialiteId?: number;
   loading = false;
   saving = false;
+  isLocal = false;
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private auth: AuthService) {}
 
   ngOnInit(): void {
+    this.isLocal = this.auth.isLocalManager();
     this.loadCentres();
   }
 
   loadCentres(): void {
-    this.api.getAdminCentres().subscribe({
-      next: (res) => {
-        this.centres = res.data || [];
-        if (this.centres.length) {
-          this.selectedCentreId = this.centres[0].id;
-          this.loadAssignments();
+    if (this.isLocal) {
+      this.api.getMyCentre().subscribe({
+        next: (res) => {
+          this.centres = [res.data as Centre];
+          if (this.centres[0]?.id) {
+            this.selectedCentreId = this.centres[0].id;
+            this.loadAssignments();
+          }
         }
-      }
-    });
+      });
+    } else {
+      this.api.getAdminCentres().subscribe({
+        next: (res) => {
+          this.centres = res.data || [];
+          if (this.centres.length) {
+            this.selectedCentreId = this.centres[0].id;
+            this.loadAssignments();
+          }
+        }
+      });
+    }
   }
 
   loadAssignments(): void {

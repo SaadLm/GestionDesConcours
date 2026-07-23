@@ -899,7 +899,10 @@ GESTIONNAIRE_LOCAL (scoped to assigned center)
 ├── View candidatures for their center only
 ├── Validate/Reject candidatures
 ├── Assign candidates to rooms
-├── View rooms in their center
+├── View, create, edit, and delete rooms in their center
+├── Add/remove specialty allocations to their center from the global pool
+├── Edit the number of places for their center's specialty allocations
+├── Cannot modify the global specialty pool (create/delete specialties)
 └── Cannot access other centers' data
 
 PUBLIC (Anonymous)
@@ -1361,59 +1364,65 @@ DELETE /api/v1/admin/centres/{id}
        Response: { success, message }
 ```
 
-#### **ADMIN - SPECIALTY ALLOCATIONS** (Requires: ADMIN, GESTIONNAIRE_GLOBAL)
+#### **ADMIN - SPECIALTY ALLOCATIONS** (Requires: ADMIN, GESTIONNAIRE_GLOBAL, GESTIONNAIRE_LOCAL)
 
 ```
 GET    /api/v1/admin/centre-specialites
-       List all allocations
+       List allocations (filtered by center for GESTIONNAIRE_LOCAL)
        Response: { success, message, data: CentreSpecialiteAllocation[] }
 
 GET    /api/v1/admin/centre-specialites/{id}
-       Get specific allocation
+       Get specific allocation (ownership check for GESTIONNAIRE_LOCAL)
        Response: { success, message, data: CentreSpecialiteAllocation }
 
 GET    /api/v1/admin/centres/{centreId}/specialites
-       Get specialties allocated to a center
+       Get specialties allocated to a center (ownership check for GESTIONNAIRE_LOCAL)
        Response: { success, message, data: CentreSpecialiteAllocation[] }
 
 POST   /api/v1/admin/centre-specialites
        Create allocation (assign specialty to center with number of places)
+       Requires: ADMIN or GESTIONNAIRE_LOCAL (limited to their own center)
        Body: { centre: {id}, specialite: {id}, nombrePlaces }
        Response: { success, message, data: CentreSpecialiteAllocation }
 
 PUT    /api/v1/admin/centre-specialites/{id}
        Update allocation
+       Requires: ADMIN or GESTIONNAIRE_LOCAL (limited to their own center)
        Body: { nombrePlaces }
        Response: { success, message, data: CentreSpecialiteAllocation }
 
 DELETE /api/v1/admin/centre-specialites/{id}
        Delete allocation
+       Requires: ADMIN or GESTIONNAIRE_LOCAL (limited to their own center)
        Response: { success, message }
 ```
 
-#### **ADMIN - ROOM MANAGEMENT** (Requires: ADMIN)
+#### **ADMIN - ROOM MANAGEMENT** (Requires: ADMIN, GESTIONNAIRE_GLOBAL, GESTIONNAIRE_LOCAL)
 
 ```
 GET    /api/v1/admin/salles
-       List all rooms
+       List rooms (filtered by center for GESTIONNAIRE_LOCAL)
        Response: { success, message, data: Salle[] }
 
 GET    /api/v1/admin/salles/{id}
-       Get specific room
+       Get specific room (ownership check for GESTIONNAIRE_LOCAL)
        Response: { success, message, data: Salle }
 
 POST   /api/v1/admin/salles
        Create new room
+       Requires: ADMIN or GESTIONNAIRE_LOCAL (limited to their own center)
        Body: { nom, capacite, centre: {id} }
        Response: { success, message, data: Salle }
 
 PUT    /api/v1/admin/salles/{id}
        Update room
+       Requires: ADMIN or GESTIONNAIRE_LOCAL (limited to their own center)
        Body: { nom, capacite }
        Response: { success, message, data: Salle }
 
 DELETE /api/v1/admin/salles/{id}
        Delete room
+       Requires: ADMIN or GESTIONNAIRE_LOCAL (limited to their own center)
        Response: { success, message }
 ```
 
@@ -1483,15 +1492,15 @@ GET    /api/v1/admin/reports/centre/{centreId}
 | Edit center | ✅ | ✅ | ❌ | ❌ |
 | Delete center | ✅ | ✅ | ❌ | ❌ |
 | **Specialty Allocations** |
-| View allocations | ✅ | ✅ | ❌ | ❌ |
-| Create allocation | ✅ | ✅ | ❌ | ❌ |
-| Edit allocation | ✅ | ✅ | ❌ | ❌ |
-| Delete allocation | ✅ | ✅ | ❌ | ❌ |
+| View allocations | ✅ | ✅ | ✅ (own center) | ❌ |
+| Create allocation | ✅ | ✅ | ✅ (own center) | ❌ |
+| Edit allocation | ✅ | ✅ | ✅ (own center) | ❌ |
+| Delete allocation | ✅ | ✅ | ✅ (own center) | ❌ |
 | **Room Management** |
 | View rooms | ✅ | ✅ | ✅ (own center) | ❌ |
-| Create room | ✅ | ❌ | ❌ | ❌ |
-| Edit room | ✅ | ❌ | ❌ | ❌ |
-| Delete room | ✅ | ❌ | ❌ | ❌ |
+| Create room | ✅ | ❌ | ✅ (own center) | ❌ |
+| Edit room | ✅ | ❌ | ✅ (own center) | ❌ |
+| Delete room | ✅ | ❌ | ✅ (own center) | ❌ |
 | **Candidature Management** |
 | View candidatures | ✅ (all) | ✅ (all) | ✅ (own center) | ❌ |
 | Submit candidature | N/A | N/A | N/A | ✅ |
@@ -1994,6 +2003,16 @@ Response: {
 - Edit allocation: `PUT /admin/centre-specialites/{id}`
   - Change number of places
 - Delete allocation: `DELETE /admin/centre-specialites/{id}`
+
+**Local Manager Can**:
+- Create allocation for their center only: `POST /admin/centre-specialites`
+  - Center is pre-selected and disabled (their assigned center)
+  - Select specialty from global pool + number of places
+- Edit allocation for their center only: `PUT /admin/centre-specialites/{id}`
+  - Change number of places
+- Delete allocation for their center only: `DELETE /admin/centre-specialites/{id}`
+- Cannot modify the global specialty pool (create/delete specialties)
+- Can only manage allocations for their assigned center
 
 ---
 
@@ -2790,7 +2809,16 @@ Administrators and global managers now have a **Salles** supervision page. It su
 - One speciality already allocated to that centre
 - Its capacity
 
-The room API (`/api/v1/admin/salles`) is available to both `ADMIN` and `GESTIONNAIRE_GLOBAL`. The candidate-assignment page then filters by centre followed by speciality, shows only validated candidates, displays their automatic room assignment, and offers only rooms compatible with their speciality for manual reassignment.
+The room API (`/api/v1/admin/salles`) is available to both `ADMIN` and `GESTIONNAIRE_GLOBAL`. Local managers (`GESTIONNAIRE_LOCAL`) can also access this page but are restricted to their assigned center only.
+
+**Technical Implementation**:
+- The `salles-management.component.ts` component separates data loading paths for local managers vs admins/global managers to avoid TypeScript union type conflicts
+- Local managers call `api.getMyCentre()` first, then load specialites and salles separately
+- Admins/global managers use `forkJoin` to load centres, specialites, and salles in parallel
+- The centre filter is automatically locked to the local manager's assigned center
+- The centre selection in the create/edit form is disabled for local managers
+
+The candidate-assignment page then filters by centre followed by speciality, shows only validated candidates, displays their automatic room assignment, and offers only rooms compatible with their speciality for manual reassignment.
 
 ### User accounts and local-manager scope
 

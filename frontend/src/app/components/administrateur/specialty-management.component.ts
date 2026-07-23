@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { Specialite } from '../../models/models';
 
 @Component({
@@ -14,12 +15,13 @@ import { Specialite } from '../../models/models';
         <div>
           <p class="eyebrow">Gestion administrative</p>
           <h2>Gestion des spécialités</h2>
-          <p>Ajoutez, modifiez ou supprimez les spécialités proposées aux concours avec une interface claire et rapide.</p>
+          <p *ngIf="!isLocal">Ajoutez, modifiez ou supprimez les spécialités proposées aux concours avec une interface claire et rapide.</p>
+          <p *ngIf="isLocal">Consultez les spécialités allouées à votre centre et modifiez leur description.</p>
         </div>
         <div class="hero-pill">{{ specialites.length }} spécialités</div>
       </div>
 
-      
+
       <div class="panel">
           <div class="panel-header">
             <h3>Liste des spécialités</h3>
@@ -27,9 +29,10 @@ import { Specialite } from '../../models/models';
           </div>
 
           <div class="empty-state" *ngIf="!loading && specialites.length === 0">
-            <p>Aucune spécialité enregistrée pour le moment.</p>
+            <p *ngIf="!isLocal">Aucune spécialité enregistrée pour le moment.</p>
+            <p *ngIf="isLocal">Aucune spécialité allouée à votre centre pour le moment.</p>
           </div>
-          
+
           <div class="item-list" *ngIf="!loading && specialites.length > 0">
             <article class="item-card" *ngFor="let specialty of specialites">
               <div>
@@ -38,36 +41,36 @@ import { Specialite } from '../../models/models';
               </div>
               <div class="item-actions">
                 <button class="btn btn-secondary" type="button" (click)="editSpecialty(specialty)">Modifier</button>
-                <button class="btn btn-danger" type="button" (click)="deleteSpecialty(specialty.id)">Supprimer</button>
+                <button class="btn btn-danger" type="button" (click)="deleteSpecialty(specialty.id)" *ngIf="canManage">Supprimer</button>
               </div>
             </article>
           </div>
         </div>
-        
-        <div class="panel">
+
+        <div class="panel" *ngIf="canManage">
           <div class="panel-header">
             <h3>{{ editingId ? 'Modifier la spécialité' : 'Ajouter une spécialité' }}</h3>
             <button class="btn btn-secondary" type="button" (click)="cancel()" *ngIf="editingId">Annuler</button>
           </div>
-  
+
           <form (ngSubmit)="submitForm()" class="stacked-form">
             <label class="field">
               <span>Nom de la spécialité</span>
               <input type="text" [(ngModel)]="form.nom" name="nom" placeholder="Ex. Informatique" required>
             </label>
-  
+
             <label class="field">
               <span>Description</span>
               <textarea rows="4" [(ngModel)]="form.description" name="description" placeholder="Décrivez cette spécialité..."></textarea>
             </label>
-  
+
             <div class="form-actions">
               <button class="btn btn-primary" type="submit" [disabled]="saving">
                 <span *ngIf="!saving">{{ editingId ? 'Enregistrer les modifications' : 'Créer la spécialité' }}</span>
                 <span *ngIf="saving">Enregistrement...</span>
               </button>
             </div>
-  
+
             <div class="alert" *ngIf="message" [class.success]="messageType === 'success'" [class.error]="messageType === 'error'">
               {{ message }}
             </div>
@@ -225,15 +228,49 @@ export class SpecialtyManagementComponent implements OnInit {
   saving = false;
   message = '';
   messageType: 'success' | 'error' = 'success';
+  isLocal = false;
+  canManage = false;
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private auth: AuthService) {}
 
   ngOnInit(): void {
+    this.isLocal = this.auth.isLocalManager();
+    this.canManage = this.auth.isAdmin() || this.auth.isGlobalManager();
     this.loadSpecialites();
   }
 
   loadSpecialites(): void {
     this.loading = true;
+    // Local managers only see the specialités allocated to their own centre.
+    if (this.isLocal) {
+      this.api.getMyCentre().subscribe({
+        next: (centreRes) => {
+          const centreId = centreRes.data?.id;
+          if (!centreId) {
+            this.specialites = [];
+            this.loading = false;
+            return;
+          }
+          this.api.getCentreSpecialitesByCentre(centreId).subscribe({
+            next: (allocRes) => {
+              this.specialites = (allocRes.data || [])
+                .map(alloc => alloc.specialite)
+                .filter((spec): spec is Specialite => !!spec && !!spec.id);
+              this.loading = false;
+            },
+            error: () => {
+              this.specialites = [];
+              this.loading = false;
+            }
+          });
+        },
+        error: () => {
+          this.specialites = [];
+          this.loading = false;
+        }
+      });
+      return;
+    }
     this.api.getAdminSpecialites().subscribe({
       next: (res) => {
         this.specialites = res.data || [];

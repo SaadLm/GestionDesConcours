@@ -1,6 +1,6 @@
 package com.competition.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,7 +24,6 @@ public class Salle {
 
     @ManyToOne
     @JoinColumn(name = "centre_id", nullable = false)
-    @JsonIgnore
     private Centre centre;
 
     @ManyToOne

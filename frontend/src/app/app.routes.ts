@@ -3,7 +3,6 @@ import { HomeComponent } from './components/home/home.component';
 import { InscriptionComponent } from './components/inscription/inscription.component';
 import { TrackingComponent } from './components/tracking/tracking.component';
 import { AuthComponent } from './components/auth/auth.component';
-import { GestionnaireLocalComponent } from './components/gestionnaire-local/gestionnaire-local.component';
 import { SupervisionLayoutComponent } from './components/supervision/supervision-layout.component';
 import { UserManagementComponent } from './components/administrateur/user-management.component';
 import { RolesAccessComponent } from './components/administrateur/roles-access.component';
@@ -29,11 +28,13 @@ export const routes: Routes = [
     canActivate: [supervisionGuard],
     data: { layoutRole: 'local' },
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: GestionnaireLocalComponent },
+      { path: '', redirectTo: 'competitions', pathMatch: 'full' },
       { path: 'competitions', component: CompetitionManagementComponent },
+      { path: 'specialties', component: SpecialtyAllocationComponent },
+      { path: 'specialty-allocations', redirectTo: 'specialties', pathMatch: 'full' },
       { path: 'salles', component: SallesManagementComponent },
-      { path: 'centre-assignments', component: CentreAssignmentsComponent }
+      { path: 'centre-assignments', component: CentreAssignmentsComponent },
+      { path: 'reports', component: ReportsStatisticsComponent }
     ]
   },
   {

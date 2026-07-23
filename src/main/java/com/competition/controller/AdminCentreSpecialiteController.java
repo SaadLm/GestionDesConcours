@@ -32,8 +32,19 @@ public class AdminCentreSpecialiteController {
     private final UserRepository userRepository;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CentreSpecialite>>> getAllCentreSpecialites() {
-        List<CentreSpecialite> list = centreSpecialiteRepository.findAll();
+    public ResponseEntity<ApiResponse<List<CentreSpecialite>>> getAllCentreSpecialites(Principal principal) {
+        List<CentreSpecialite> list;
+        User user = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new BusinessException("Utilisateur non connecté."));
+        if (user.getRole() == Role.GESTIONNAIRE_LOCAL) {
+            // Local managers only see allocations for their own centre.
+            if (user.getCentre() == null || user.getCentre().getId() == null) {
+                throw new BusinessException("Le gestionnaire local n'est associé à aucun centre.");
+            }
+            list = centreSpecialiteRepository.findByCentreId(user.getCentre().getId());
+        } else {
+            list = centreSpecialiteRepository.findAll();
+        }
         return ResponseEntity.ok(ApiResponse.<List<CentreSpecialite>>builder()
                 .success(true)
                 .message("Allocations récupérées avec succès.")
@@ -59,9 +70,17 @@ public class AdminCentreSpecialiteController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_LOCAL')")
     public ResponseEntity<ApiResponse<CentreSpecialite>> createAllocation(
-            @RequestBody CentreSpecialiteRequest request) {
+            @RequestBody CentreSpecialiteRequest request, Principal principal) {
+        User user = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new BusinessException("Utilisateur non connecté."));
+        if (user.getRole() == Role.GESTIONNAIRE_LOCAL) {
+            if (user.getCentre() == null || !user.getCentre().getId().equals(request.getCentreId())) {
+                throw new BusinessException("Accès refusé. Vous ne pouvez allouer des spécialités que pour votre propre centre.");
+            }
+        }
+
         Centre centre = centreRepository.findById(request.getCentreId())
                 .orElseThrow(() -> new RuntimeException("Centre non trouvé."));
         Specialite specialite = specialiteRepository.findById(request.getSpecialiteId())
@@ -82,11 +101,18 @@ public class AdminCentreSpecialiteController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_LOCAL')")
     public ResponseEntity<ApiResponse<CentreSpecialite>> updateAllocation(
-            @PathVariable Long id, @RequestBody CentreSpecialite allocationDetails) {
+            @PathVariable Long id, @RequestBody CentreSpecialite allocationDetails, Principal principal) {
         CentreSpecialite allocation = centreSpecialiteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Allocation non trouvée."));
+        User user = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new BusinessException("Utilisateur non connecté."));
+        if (user.getRole() == Role.GESTIONNAIRE_LOCAL) {
+            if (user.getCentre() == null || !user.getCentre().getId().equals(allocation.getCentre().getId())) {
+                throw new BusinessException("Accès refusé. Vous ne pouvez modifier que les allocations de votre propre centre.");
+            }
+        }
         
         allocation.setNombrePlaces(allocationDetails.getNombrePlaces());
         
@@ -99,10 +125,17 @@ public class AdminCentreSpecialiteController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> deleteAllocation(@PathVariable Long id) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE_LOCAL')")
+    public ResponseEntity<ApiResponse<Void>> deleteAllocation(@PathVariable Long id, Principal principal) {
         CentreSpecialite allocation = centreSpecialiteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Allocation non trouvée."));
+        User user = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new BusinessException("Utilisateur non connecté."));
+        if (user.getRole() == Role.GESTIONNAIRE_LOCAL) {
+            if (user.getCentre() == null || !user.getCentre().getId().equals(allocation.getCentre().getId())) {
+                throw new BusinessException("Accès refusé. Vous ne pouvez supprimer que les allocations de votre propre centre.");
+            }
+        }
         centreSpecialiteRepository.delete(allocation);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .success(true)

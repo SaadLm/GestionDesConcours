@@ -142,7 +142,7 @@ import { Centre, Concours, Candidature, Specialite, UploadedDocument } from '../
 
             <div class="form-group">
               <label>Centre associé *</label>
-              <select [(ngModel)]="formConcours.centre" name="centre" class="form-control" [class.error]="errors['centre']" (change)="onCentreChange()">
+              <select [(ngModel)]="formConcours.centre" name="centre" class="form-control" [class.error]="errors['centre']" (change)="onCentreChange()" [disabled]="isLocalManager">
                 <option [ngValue]="undefined">-- Aucun centre --</option>
                 <option *ngFor="let centre of centres" [ngValue]="centre">
                   {{ centre.nom }} — {{ centre.ville }}
@@ -258,7 +258,7 @@ import { Centre, Concours, Candidature, Specialite, UploadedDocument } from '../
 
             <div class="form-group">
               <label>Centre associé *</label>
-              <select [(ngModel)]="formConcours.centre" name="centre" class="form-control" [class.error]="errors['centre']" (change)="onCentreChange()">
+              <select [(ngModel)]="formConcours.centre" name="centre" class="form-control" [class.error]="errors['centre']" (change)="onCentreChange()" [disabled]="isLocalManager">
                 <option [ngValue]="undefined">-- Aucun centre --</option>
                 <option *ngFor="let centre of centres" [ngValue]="centre">
                   {{ centre.nom }} — {{ centre.ville }}
@@ -731,6 +731,7 @@ export class CompetitionManagementComponent implements OnInit {
   editingConcours: Concours | null = null;
   formConcours: Concours = this.emptyForm();
   canManage = false;
+  isLocalManager = false;
   activeConcoursId?: number;
   selectedConcours?: Concours;
   candidatureList: Candidature[] = [];
@@ -747,6 +748,7 @@ export class CompetitionManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.canManage = this.auth.isAdmin() || this.auth.isGlobalManager() || this.auth.isLocalManager();
+    this.isLocalManager = this.auth.isLocalManager();
     this.loadConcours();
     this.loadCentres();
   }

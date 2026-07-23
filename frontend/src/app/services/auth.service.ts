@@ -15,8 +15,8 @@ export class AuthService {
   private userSubject = new BehaviorSubject<UserSession | null>(null);
   public user$: Observable<UserSession | null> = this.userSubject.asObservable();
 
-  // private baseUrl = 'http://localhost:8080/api/v1';
-    private baseUrl = 'https://gestiondesconcours-production.up.railway.app/api/v1';
+  private baseUrl = 'http://localhost:8080/api/v1';
+    // private baseUrl = 'https://gestiondesconcours-production.up.railway.app/api/v1';
 
   constructor(private http: HttpClient) {
     // restore session if token present

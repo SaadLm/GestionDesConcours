@@ -26,13 +26,14 @@ interface SalleInfo {
     <div class="allocation-section">
       <div class="section-header">
         <!-- <h2>Attribution des Spécialités aux Centres</h2> -->
-        <h2 *ngIf="canManage">Gérez l'allocation des spécialités aux différents centres d'examen.</h2>
-        <h2 *ngIf="!canManage">Consultez les allocations de spécialités par centre d'examen.</h2>
+        <h2 *ngIf="isLocal">Gérez l'allocation des spécialités à votre centre d'examen.</h2>
+        <h2 *ngIf="!isLocal && canManage">Gérez l'allocation des spécialités aux différents centres d'examen.</h2>
+        <h2 *ngIf="!isLocal && !canManage">Consultez les allocations de spécialités par centre d'examen.</h2>
       </div>
 
       <!-- Filter Bar -->
       <section class="filter-bar">
-        <div class="filter-group">
+        <div class="filter-group" *ngIf="!isLocal">
           <label>Filtrer par Centre</label>
           <select [(ngModel)]="selectedCentreFilter" (change)="onFilterChange()">
             <option [value]="null">-- Tous les centres --</option>
@@ -109,7 +110,8 @@ interface SalleInfo {
                 [(ngModel)]="formAllocation.centreId"
                 name="centreId"
                 class="form-control"
-                [class.error]="errors['centreId']">
+                [class.error]="errors['centreId']"
+                [disabled]="isLocal">
                 <option [ngValue]="null">-- Sélectionner un centre --</option>
                 <option *ngFor="let centre of centres" [ngValue]="centre.id">
                   {{ centre.nom }} - {{ centre.ville }}
@@ -470,7 +472,8 @@ export class SpecialtyAllocationComponent implements OnInit {
   specialites: Specialite[] = [];
   sallesData: Map<number, SalleInfo[]> = new Map(); // centreId -> SalleInfo[]
   canManage = false;
-  
+  isLocal = false;
+
   editingAllocation: AllocationRow | null = null;
   formAllocation: { centreId: number | null; specialiteId: number | null; nombrePlaces: number } = {
     centreId: null,
@@ -489,7 +492,8 @@ export class SpecialtyAllocationComponent implements OnInit {
   constructor(private api: ApiService, private auth: AuthService) {}
 
   ngOnInit(): void {
-    this.canManage = this.auth.canManagePlatform();
+    this.isLocal = this.auth.isLocalManager();
+    this.canManage = this.auth.canManagePlatform() || this.isLocal;
     this.loadCentres();
     this.loadSpecialites();
     this.loadSallesData();
@@ -500,6 +504,10 @@ export class SpecialtyAllocationComponent implements OnInit {
       next: (res) => {
         this.centres = res.data || [];
         this.loadAllocations();
+        if (this.isLocal && this.centres.length === 1 && this.centres[0].id) {
+          this.selectedCentreFilter = this.centres[0].id;
+          this.formAllocation.centreId = this.centres[0].id;
+        }
       },
       error: () => {
         this.message = 'Erreur lors du chargement des centres.';
@@ -562,29 +570,53 @@ export class SpecialtyAllocationComponent implements OnInit {
     }
 
     this.loadingAllocations = true;
-    const requests = this.centres
-      .filter(c => c.id != null)
-      .map(c => this.api.getCentreSpecialitesByCentre(c.id!));
+    if (this.isLocal) {
+      // Local managers use their own endpoint
+      this.api.getManagerCentreSpecialites().subscribe({
+        next: (res) => {
+          if (this.centres.length > 0) {
+            const centre = this.centres[0];
+            this.allocations = (res.data || []).map(item => ({
+              ...item,
+              centreId: centre.id,
+              centreName: centre.nom,
+              specialiteName: item.specialite?.nom || '—'
+            }));
+          }
+          this.loadingAllocations = false;
+        },
+        error: () => {
+          this.message = 'Erreur lors du chargement des allocations.';
+          this.messageType = 'error';
+          this.loadingAllocations = false;
+        }
+      });
+    } else {
+      // Admins/global managers load all centers
+      const requests = this.centres
+        .filter(c => c.id != null)
+        .map(c => this.api.getCentreSpecialitesByCentre(c.id!));
 
-    forkJoin(requests).subscribe({
-      next: (responses) => {
-        this.allocations = responses.flatMap((res, index) => {
-          const centre = this.centres[index];
-          return (res.data || []).map(item => ({
-            ...item,
-            centreId: centre.id,
-            centreName: centre.nom,
-            specialiteName: item.specialite?.nom || '—'
-          }));
-        });
-        this.loadingAllocations = false;
-      },
-      error: () => {
-        this.message = 'Erreur lors du chargement des allocations.';
-        this.messageType = 'error';
-        this.loadingAllocations = false;
-      }
-    });
+      forkJoin(requests).subscribe({
+        next: (responses) => {
+          this.allocations = responses.flatMap((res, index) => {
+            const centre = this.centres[index];
+            return (res.data || []).map(item => ({
+              ...item,
+              centreId: centre.id,
+              centreName: centre.nom,
+              specialiteName: item.specialite?.nom || '—'
+            }));
+          });
+          this.loadingAllocations = false;
+        },
+        error: () => {
+          this.message = 'Erreur lors du chargement des allocations.';
+          this.messageType = 'error';
+          this.loadingAllocations = false;
+        }
+      });
+    }
   }
 
   get filteredAllocations(): AllocationRow[] {
@@ -609,7 +641,11 @@ export class SpecialtyAllocationComponent implements OnInit {
 
   cancelEdit(): void {
     this.editingAllocation = null;
-    this.formAllocation = { centreId: null, specialiteId: null, nombrePlaces: 50 };
+    this.formAllocation = {
+      centreId: (this.isLocal && this.centres.length === 1) ? this.centres[0].id! : null,
+      specialiteId: null,
+      nombrePlaces: 50
+    };
     this.errors = {};
   }
 
@@ -639,18 +675,28 @@ export class SpecialtyAllocationComponent implements OnInit {
     this.savingAllocation = true;
 
     if (this.editingAllocation?.id) {
-      this.api.updateCentreSpecialite(this.editingAllocation.id, this.formAllocation.nombrePlaces).subscribe({
+      const request = this.isLocal
+        ? this.api.updateManagerCentreSpecialite(this.editingAllocation.id, this.formAllocation.nombrePlaces)
+        : this.api.updateCentreSpecialite(this.editingAllocation.id, this.formAllocation.nombrePlaces);
+      request.subscribe({
         next: () => this.onSaveSuccess('Allocation mise à jour.'),
         error: () => this.onSaveError()
       });
       return;
     }
 
-    this.api.createCentreSpecialite({
-      centreId: this.formAllocation.centreId!,
-      specialiteId: this.formAllocation.specialiteId!,
-      nombrePlaces: this.formAllocation.nombrePlaces
-    }).subscribe({
+    const request = this.isLocal
+      ? this.api.createManagerCentreSpecialite({
+          centreId: this.formAllocation.centreId!,
+          specialiteId: this.formAllocation.specialiteId!,
+          nombrePlaces: this.formAllocation.nombrePlaces
+        })
+      : this.api.createCentreSpecialite({
+          centreId: this.formAllocation.centreId!,
+          specialiteId: this.formAllocation.specialiteId!,
+          nombrePlaces: this.formAllocation.nombrePlaces
+        });
+    request.subscribe({
       next: () => this.onSaveSuccess('Allocation créée.'),
       error: () => this.onSaveError()
     });
@@ -675,7 +721,8 @@ export class SpecialtyAllocationComponent implements OnInit {
     const confirmed = window.confirm('Êtes-vous sûr de vouloir supprimer cette allocation?');
     if (!confirmed) return;
 
-    this.api.deleteCentreSpecialite(id).subscribe({
+    const request = this.isLocal ? this.api.deleteManagerCentreSpecialite(id) : this.api.deleteCentreSpecialite(id);
+    request.subscribe({
       next: () => {
         this.message = 'Allocation supprimée.';
         this.messageType = 'success';

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { Centre, Concours, ReportData, Specialite } from '../../models/models';
 
 @Component({
@@ -15,7 +16,7 @@ import { Centre, Concours, ReportData, Specialite } from '../../models/models';
         <p>Générez et consultez les rapports sur les candidatures et les concours.</p>
       </div>
 
-      <section class="report-selection">
+      <section class="report-selection" *ngIf="!isLocal">
         <h3>Générer un Rapport</h3>
         <div class="report-grid">
           <div class="report-card"
@@ -30,7 +31,8 @@ import { Centre, Concours, ReportData, Specialite } from '../../models/models';
       </section>
 
       <section *ngIf="selectedReportType" class="report-filters">
-        <h3>Paramètres du Rapport</h3>
+        <h3 *ngIf="!isLocal">Paramètres du Rapport</h3>
+        <h3 *ngIf="isLocal">Rapport de votre centre</h3>
         <form (ngSubmit)="generateReport()" class="filter-form">
           <div class="form-row">
             <div class="form-group">
@@ -43,7 +45,7 @@ import { Centre, Concours, ReportData, Specialite } from '../../models/models';
             </div>
           </div>
 
-          <div class="form-row" *ngIf="selectedReportType === 'by_concours'">
+          <div class="form-row" *ngIf="selectedReportType === 'by_concours' && !isLocal">
             <div class="form-group">
               <label>Sélectionner un Concours</label>
               <select [(ngModel)]="reportFilters.concoursId" name="concoursId" class="form-control">
@@ -53,7 +55,7 @@ import { Centre, Concours, ReportData, Specialite } from '../../models/models';
             </div>
           </div>
 
-          <div class="form-row" *ngIf="selectedReportType === 'by_specialite'">
+          <div class="form-row" *ngIf="selectedReportType === 'by_specialite' && !isLocal">
             <div class="form-group">
               <label>Sélectionner une Spécialité</label>
               <select [(ngModel)]="reportFilters.specialiteId" name="specialiteId" class="form-control">
@@ -63,7 +65,7 @@ import { Centre, Concours, ReportData, Specialite } from '../../models/models';
             </div>
           </div>
 
-          <div class="form-row" *ngIf="selectedReportType === 'by_centre'">
+          <div class="form-row" *ngIf="selectedReportType === 'by_centre' && !isLocal">
             <div class="form-group">
               <label>Sélectionner un Centre</label>
               <select [(ngModel)]="reportFilters.centreId" name="centreId" class="form-control">
@@ -78,7 +80,7 @@ import { Centre, Concours, ReportData, Specialite } from '../../models/models';
               <span *ngIf="!generatingReport">📊 Générer le Rapport</span>
               <span *ngIf="generatingReport">Génération en cours...</span>
             </button>
-            <button type="button" class="btn btn-secondary" (click)="loadGlobalStats()" [disabled]="loadingGlobal">
+            <button type="button" class="btn btn-secondary" (click)="loadGlobalStats()" [disabled]="loadingGlobal" *ngIf="!isLocal">
               📈 Statistiques globales
             </button>
           </div>
@@ -230,6 +232,9 @@ export class ReportsStatisticsComponent implements OnInit {
   specialitesList: Specialite[] = [];
   centresList: Centre[] = [];
 
+  isLocal = false;
+  myCentreId?: number;
+
   reportFilters = {
     dateFrom: '',
     dateTo: '',
@@ -244,9 +249,25 @@ export class ReportsStatisticsComponent implements OnInit {
     { id: 'by_centre', title: 'Par Centre d\'Examen', icon: '🏢', description: 'Statistiques par centre' }
   ];
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private auth: AuthService) {}
 
   ngOnInit(): void {
+    this.isLocal = this.auth.isLocalManager();
+    if (this.isLocal) {
+      // Local manager: auto-scope to his centre, lock to "by centre" report.
+      this.api.getMyCentre().subscribe({
+        next: (res) => {
+          const centre = res.data as Centre;
+          this.myCentreId = centre.id;
+          this.centresList = [centre];
+          this.reportFilters.centreId = this.myCentreId ?? null;
+          this.selectedReportType = 'by_centre';
+          this.generateReport();
+        }
+      });
+      return;
+    }
+    // Admin / Global: load all reference data as before.
     this.api.getAdminConcours().subscribe({ next: (res) => this.concoursList = res.data || [] });
     this.api.getAdminSpecialites().subscribe({ next: (res) => this.specialitesList = res.data || [] });
     this.api.getAdminCentres().subscribe({ next: (res) => this.centresList = res.data || [] });
